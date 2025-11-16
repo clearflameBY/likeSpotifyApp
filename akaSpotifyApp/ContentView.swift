@@ -1,21 +1,28 @@
-//
-//  ContentView.swift
-//  akaSpotifyApp
-//
-//  Created by Илья Степаненко on 3.11.25.
-//
-
 import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            Image(systemName: "globe")
-                .imageScale(.large)
-                .foregroundStyle(.tint)
-            Text("Hello, world!")
+        TabView {
+            HomeView()
+                .tabItem {
+                    Label("Главная", systemImage: "music.note")
+                }
+            
+            SearchView()
+                .tabItem {
+                    Label("Поиск", systemImage: "magnifyingglass")
+                }
+            
+            LibraryView()
+                .tabItem {
+                    Label("Медиатека", systemImage: "square.stack.fill")
+                }
+            
+            ProfileView()
+                .tabItem {
+                    Label("Профиль", systemImage: "person.crop.circle")
+                }
         }
-        .padding()
     }
 }
 

@@ -6,6 +6,12 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		C69549212EC8A32E0080BFFB /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = C69549202EC8A32E0080BFFB /* FirebaseStorage */; };
+		C69549232EC8A43F0080BFFB /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = C69549222EC8A43F0080BFFB /* FirebaseAuth */; };
+		C69549252EC8A4520080BFFB /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = C69549242EC8A4520080BFFB /* FirebaseFirestore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		C6FAA06B2EB936CE00BE3B36 /* akaSpotifyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = akaSpotifyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,16 +29,27 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C69549212EC8A32E0080BFFB /* FirebaseStorage in Frameworks */,
+				C69549232EC8A43F0080BFFB /* FirebaseAuth in Frameworks */,
+				C69549252EC8A4520080BFFB /* FirebaseFirestore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		C695491F2EC8A32E0080BFFB /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		C6FAA0622EB936CE00BE3B36 = {
 			isa = PBXGroup;
 			children = (
 				C6FAA06D2EB936CE00BE3B36 /* akaSpotifyApp */,
+				C695491F2EC8A32E0080BFFB /* Frameworks */,
 				C6FAA06C2EB936CE00BE3B36 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -65,6 +82,9 @@
 			);
 			name = akaSpotifyApp;
 			packageProductDependencies = (
+				C69549202EC8A32E0080BFFB /* FirebaseStorage */,
+				C69549222EC8A43F0080BFFB /* FirebaseAuth */,
+				C69549242EC8A4520080BFFB /* FirebaseFirestore */,
 			);
 			productName = akaSpotifyApp;
 			productReference = C6FAA06B2EB936CE00BE3B36 /* akaSpotifyApp.app */;
@@ -78,7 +98,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 2600;
-				LastUpgradeCheck = 2600;
+				LastUpgradeCheck = 2610;
 				TargetAttributes = {
 					C6FAA06A2EB936CE00BE3B36 = {
 						CreatedOnToolsVersion = 26.0.1;
@@ -94,6 +114,9 @@
 			);
 			mainGroup = C6FAA0622EB936CE00BE3B36;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				C695491E2EC8A2B20080BFFB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = C6FAA06C2EB936CE00BE3B36 /* Products */;
 			projectDirPath = "";
@@ -184,6 +207,7 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 			};
@@ -241,6 +265,7 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				VALIDATE_PRODUCT = YES;
 			};
@@ -261,6 +286,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -293,6 +319,7 @@
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -332,6 +359,35 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		C695491E2EC8A2B20080BFFB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 12.6.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		C69549202EC8A32E0080BFFB /* FirebaseStorage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C695491E2EC8A2B20080BFFB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseStorage;
+		};
+		C69549222EC8A43F0080BFFB /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C695491E2EC8A2B20080BFFB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		C69549242EC8A4520080BFFB /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C695491E2EC8A2B20080BFFB /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = C6FAA0632EB936CE00BE3B36 /* Project object */;
 }
