@@ -27,7 +27,7 @@ struct HomeView: View {
                     }
 
                     // Снова играет
-                    SectionHeader(title: "Снова играет")
+                    SectionHeaderForHomeView(title: "Снова играет")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             ForEach(viewModel.recentPlaylists, id: \.name) { playlist in
@@ -38,7 +38,7 @@ struct HomeView: View {
                     }
 
                     // Новые релизы
-                    SectionHeader(title: "Новые релизы")
+                    SectionHeaderForHomeView(title: "Новые релизы")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             ForEach(viewModel.newReleases, id: \.name) { playlist in
@@ -49,11 +49,11 @@ struct HomeView: View {
                     }
 
                     // Рекомендации по жанрам
-                    SectionHeader(title: "Рекомендации по жанрам")
+                    SectionHeaderForHomeView(title: "Рекомендации по жанрам")
                     GenreGrid(genres: viewModel.recommendedGenres)
 
                     // Недавно прослушанные треки
-                    SectionHeader(title: "Недавно прослушанные треки")
+                    SectionHeaderForHomeView(title: "Недавно прослушанные треки")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
                             ForEach(viewModel.recentTracks, id: \.trackName) { track in
@@ -73,7 +73,7 @@ struct HomeView: View {
 
 // MARK: - SectionHeader
 
-struct SectionHeader: View {
+struct SectionHeaderForHomeView: View {
     let title: String
     var body: some View {
         Text(title)
