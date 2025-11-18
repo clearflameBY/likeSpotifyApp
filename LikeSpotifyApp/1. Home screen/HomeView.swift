@@ -7,10 +7,6 @@ struct HomeView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Приветствие
-                    Text("Добро пожаловать, User 👋")
-                        .font(.largeTitle)
-                        .padding(.horizontal)
 
                     // Поиск
                     NavigationLink(destination: SearchView()) {

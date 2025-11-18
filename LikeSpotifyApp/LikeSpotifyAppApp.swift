@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct akaSpotifyAppApp: App {
+struct LikeSpotifyAppApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()

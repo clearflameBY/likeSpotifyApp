@@ -2,7 +2,6 @@ import Foundation
 import Combine
 
 final class HomeViewModel: ObservableObject {
-    //var objectWillChange: ObservableObjectPublisher
     
     @Published var recentPlaylists: [Playlist] = [
         Playlist(name: "Любимые треки", description: "Треки, которые вы слушаете чаще всего", trackList: [

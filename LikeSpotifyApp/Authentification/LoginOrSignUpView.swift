@@ -10,7 +10,7 @@ struct LoginOrSignUpView: View {
 
     var body: some View {
         ZStack {
-            Color.black.ignoresSafeArea()
+            Color.gray.ignoresSafeArea()
             VStack(spacing: 32) {
                 Spacer()
                 Image(systemName: "music.note")
@@ -30,6 +30,7 @@ struct LoginOrSignUpView: View {
                             .padding()
                             .background(Color(.secondarySystemBackground))
                             .cornerRadius(10)
+                            .foregroundStyle(.black)
                     }
                     TextField("Email", text: $email)
                         .keyboardType(.emailAddress)
@@ -38,11 +39,13 @@ struct LoginOrSignUpView: View {
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
+                        .foregroundStyle(.black)
                     SecureField("Пароль", text: $password)
                         .textFieldStyle(.plain)
                         .padding()
                         .background(Color(.secondarySystemBackground))
                         .cornerRadius(10)
+                        .foregroundStyle(.black)
                 }
                 .foregroundColor(.white)
                 .padding(.horizontal)

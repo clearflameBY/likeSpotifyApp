@@ -13,13 +13,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		C6FAA06B2EB936CE00BE3B36 /* akaSpotifyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = akaSpotifyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		C6FAA06B2EB936CE00BE3B36 /* LikeSpotifyApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LikeSpotifyApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		C6FAA06D2EB936CE00BE3B36 /* akaSpotifyApp */ = {
+		C6FAA06D2EB936CE00BE3B36 /* LikeSpotifyApp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = akaSpotifyApp;
+			path = LikeSpotifyApp;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -48,7 +48,7 @@
 		C6FAA0622EB936CE00BE3B36 = {
 			isa = PBXGroup;
 			children = (
-				C6FAA06D2EB936CE00BE3B36 /* akaSpotifyApp */,
+				C6FAA06D2EB936CE00BE3B36 /* LikeSpotifyApp */,
 				C695491F2EC8A32E0080BFFB /* Frameworks */,
 				C6FAA06C2EB936CE00BE3B36 /* Products */,
 			);
@@ -57,7 +57,7 @@
 		C6FAA06C2EB936CE00BE3B36 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				C6FAA06B2EB936CE00BE3B36 /* akaSpotifyApp.app */,
+				C6FAA06B2EB936CE00BE3B36 /* LikeSpotifyApp.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -65,9 +65,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		C6FAA06A2EB936CE00BE3B36 /* akaSpotifyApp */ = {
+		C6FAA06A2EB936CE00BE3B36 /* LikeSpotifyApp */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C6FAA0762EB936CF00BE3B36 /* Build configuration list for PBXNativeTarget "akaSpotifyApp" */;
+			buildConfigurationList = C6FAA0762EB936CF00BE3B36 /* Build configuration list for PBXNativeTarget "LikeSpotifyApp" */;
 			buildPhases = (
 				C6FAA0672EB936CE00BE3B36 /* Sources */,
 				C6FAA0682EB936CE00BE3B36 /* Frameworks */,
@@ -78,16 +78,16 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				C6FAA06D2EB936CE00BE3B36 /* akaSpotifyApp */,
+				C6FAA06D2EB936CE00BE3B36 /* LikeSpotifyApp */,
 			);
-			name = akaSpotifyApp;
+			name = LikeSpotifyApp;
 			packageProductDependencies = (
 				C69549202EC8A32E0080BFFB /* FirebaseStorage */,
 				C69549222EC8A43F0080BFFB /* FirebaseAuth */,
 				C69549242EC8A4520080BFFB /* FirebaseFirestore */,
 			);
 			productName = akaSpotifyApp;
-			productReference = C6FAA06B2EB936CE00BE3B36 /* akaSpotifyApp.app */;
+			productReference = C6FAA06B2EB936CE00BE3B36 /* LikeSpotifyApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -105,7 +105,7 @@
 					};
 				};
 			};
-			buildConfigurationList = C6FAA0662EB936CE00BE3B36 /* Build configuration list for PBXProject "akaSpotifyApp" */;
+			buildConfigurationList = C6FAA0662EB936CE00BE3B36 /* Build configuration list for PBXProject "LikeSpotifyApp" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -122,7 +122,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				C6FAA06A2EB936CE00BE3B36 /* akaSpotifyApp */,
+				C6FAA06A2EB936CE00BE3B36 /* LikeSpotifyApp */,
 			);
 		};
 /* End PBXProject section */
@@ -340,7 +340,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C6FAA0662EB936CE00BE3B36 /* Build configuration list for PBXProject "akaSpotifyApp" */ = {
+		C6FAA0662EB936CE00BE3B36 /* Build configuration list for PBXProject "LikeSpotifyApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C6FAA0742EB936CF00BE3B36 /* Debug */,
@@ -349,7 +349,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C6FAA0762EB936CF00BE3B36 /* Build configuration list for PBXNativeTarget "akaSpotifyApp" */ = {
+		C6FAA0762EB936CF00BE3B36 /* Build configuration list for PBXNativeTarget "LikeSpotifyApp" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				C6FAA0772EB936CF00BE3B36 /* Debug */,
