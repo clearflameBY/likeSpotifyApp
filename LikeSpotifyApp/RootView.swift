@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct RootView: View {
-    @StateObject private var auth = AuthViewModel()
+    @StateObject private var auth = AuthService()
 
     var body: some View {
         Group {

@@ -1,12 +1,11 @@
 import SwiftUI
 
 struct LoginOrSignUpView: View {
-    @EnvironmentObject private var auth: AuthViewModel
+    @EnvironmentObject private var authService: AuthService
 
     @State private var isLogin = true
     @State private var email = ""
     @State private var password = ""
-    @State private var username = ""
 
     var body: some View {
         ZStack {
@@ -24,14 +23,6 @@ struct LoginOrSignUpView: View {
                     .bold()
 
                 VStack(spacing: 18) {
-                    if !isLogin {
-                        TextField("Имя пользователя", text: $username)
-                            .textFieldStyle(.plain)
-                            .padding()
-                            .background(Color(.secondarySystemBackground))
-                            .cornerRadius(10)
-                            .foregroundStyle(.black)
-                    }
                     TextField("Email", text: $email)
                         .keyboardType(.emailAddress)
                         .autocapitalization(.none)
@@ -50,7 +41,7 @@ struct LoginOrSignUpView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal)
 
-                if let error = auth.errorMessage {
+                if let error = authService.errorMessage {
                     Text(error)
                         .foregroundColor(.red)
                         .font(.callout)
@@ -59,10 +50,14 @@ struct LoginOrSignUpView: View {
 
                 Button {
                     Task {
-                        if isLogin {
-                            await auth.login(email: email, password: password)
-                        } else {
-                            await auth.register(email: email, password: password, username: username)
+                        do {
+                            if isLogin {
+                                try await authService.signIn(withEmail: email, password: password)
+                            } else {
+                                try await authService.createUser(withEmail: email, password: password)
+                            }
+                        } catch {
+                            print(error.localizedDescription) 
                         }
                     }
                 } label: {
@@ -77,20 +72,19 @@ struct LoginOrSignUpView: View {
                     .foregroundColor(.black)
                     .cornerRadius(12)
                 }
-                .disabled(auth.isLoading || email.isEmpty || password.isEmpty || (!isLogin && username.isEmpty))
+                .disabled(authService.isLoading || email.isEmpty || password.isEmpty || (!isLogin && email.isEmpty))
 
                 Button(isLogin ? "Нет аккаунта? Зарегистрируйтесь" : "Уже есть аккаунт? Войти") {
                     withAnimation { isLogin.toggle() }
-                    auth.errorMessage = nil
+                    authService.errorMessage = nil
                 }
                 .foregroundColor(.green)
                 .font(.callout)
-
                 Spacer()
             }
             .padding()
             .overlay(
-                auth.isLoading ? ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .green)) : nil
+                authService.isLoading ? ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .green)) : nil
             )
         }
     }

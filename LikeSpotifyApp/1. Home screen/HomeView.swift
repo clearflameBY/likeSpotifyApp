@@ -26,9 +26,9 @@ struct HomeView: View {
                     SectionHeaderForHomeView(title: "Снова играет")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(viewModel.recentPlaylists, id: \.name) { playlist in
-                                PlaylistCard(playlist: playlist)
-                            }
+//                            ForEach($viewModel.tracks, id: \.trackName) { playlist in
+//                                PlaylistCard(playlist: HomeView)
+//                            }
                         }
                         .padding(.horizontal)
                     }
@@ -37,24 +37,24 @@ struct HomeView: View {
                     SectionHeaderForHomeView(title: "Новые релизы")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(viewModel.newReleases, id: \.name) { playlist in
-                                PlaylistCard(playlist: playlist)
-                            }
+//                            ForEach(viewModel.newReleases, id: \.name) { playlist in
+//                                PlaylistCard(playlist: playlist)
+//                            }
                         }
                         .padding(.horizontal)
                     }
 
                     // Рекомендации по жанрам
                     SectionHeaderForHomeView(title: "Рекомендации по жанрам")
-                    GenreGrid(genres: viewModel.recommendedGenres)
+//                    GenreGrid(genres: viewModel.recommendedGenres)
 
                     // Недавно прослушанные треки
                     SectionHeaderForHomeView(title: "Недавно прослушанные треки")
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 16) {
-                            ForEach(viewModel.recentTracks, id: \.trackName) { track in
-                                TrackCard(track: track)
-                            }
+//                            ForEach(viewModel.recentTracks, id: \.trackName) { track in
+//                                TrackCard(track: track)
+//                            }
                         }
                         .padding(.horizontal)
                     }
@@ -99,7 +99,7 @@ struct PlaylistCard: View {
             Text(playlist.name)
                 .font(.headline)
                 .lineLimit(1)
-            Text("\(playlist.trackList.count) треков")
+ //           Text("\(playlist.trackList.count) треков")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
         }

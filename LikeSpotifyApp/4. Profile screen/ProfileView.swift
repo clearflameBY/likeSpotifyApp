@@ -1,11 +1,8 @@
 import SwiftUI
 
 struct ProfileView: View {
-    // Для интеграции с системой авторизации
-    @EnvironmentObject private var auth: AuthViewModel
+    @EnvironmentObject private var authService: AuthService
 
-    let userName = "Илья Степаненко"
-    let userEmail = "ilya@mail.com"
     let followers = 120
     let following = 45
 
@@ -13,22 +10,16 @@ struct ProfileView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 24) {
-                    // Фото пользователя
                     Image(systemName: "person.crop.circle.fill")
                         .resizable()
                         .frame(width: 100, height: 100)
                         .foregroundColor(.green)
                         .padding(.top, 32)
-
-                    // Имя и email
-                    Text(userName)
-                        .font(.title)
-                        .bold()
-                    Text(userEmail)
+                    
+                    Text(authService.userEmail ?? "Нет email")
                         .foregroundColor(.secondary)
                         .font(.subheadline)
-
-                    // Статистика
+                    
                     HStack(spacing: 32) {
                         VStack {
                             Text("\(followers)")
@@ -48,11 +39,9 @@ struct ProfileView: View {
                         }
                     }
                     .padding(.top, 8)
-
-                    // Действия
+                    
                     VStack(spacing: 12) {
                         Button(action: {
-                            // Настройки профиля
                         }) {
                             HStack {
                                 Image(systemName: "gearshape")
@@ -65,9 +54,8 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(10)
                         }
-
+                        
                         Button(action: {
-                            // Понравившиеся треки
                         }) {
                             HStack {
                                 Image(systemName: "heart.fill")
@@ -81,9 +69,8 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(10)
                         }
-
+                        
                         Button(action: {
-                            // Созданные плейлисты
                         }) {
                             HStack {
                                 Image(systemName: "music.note.list")
@@ -97,9 +84,9 @@ struct ProfileView: View {
                             .background(Color(.systemGray6))
                             .cornerRadius(10)
                         }
-
+                        
                         Button(role: .destructive, action: {
-                            auth.logout()
+                            authService.logout()
                         }) {
                             HStack {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")

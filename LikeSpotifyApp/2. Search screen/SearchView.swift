@@ -6,11 +6,11 @@ struct SearchView: View {
     
     // Примерные данные
     let genres = ["Поп", "Рок", "Хип-хоп", "Электроника", "Джаз", "Классика"]
-    let popularTracks = [
-        Track(trackName: "Shape of You", performerName: "Ed Sheeran", albumName: "Divide", duration: "3:53"),
-        Track(trackName: "Blinding Lights", performerName: "The Weeknd", albumName: "After Hours", duration: "3:20"),
-        Track(trackName: "Bad Guy", performerName: "Billie Eilish", albumName: "When We All Fall Asleep", duration: "3:14")
-    ]
+    //let popularTracks = [
+//        Track(trackName: "Shape of You", performerName: "Ed Sheeran", albumName: "Divide", duration: "3:53"),
+//        Track(trackName: "Blinding Lights", performerName: "The Weeknd", albumName: "After Hours", duration: "3:20"),
+//        Track(trackName: "Bad Guy", performerName: "Billie Eilish", albumName: "When We All Fall Asleep", duration: "3:14")
+ //   ]
     let newAlbums = ["1989 (Taylor's Version)", "Certified Lover Boy", "Justice", "Random Access Memories"]
     let newArtists = ["Olivia Rodrigo", "Doja Cat", "Glass Animals", "Lil Nas X"]
 
@@ -48,9 +48,9 @@ struct SearchView: View {
                     // Чарты популярных треков
                     SectionHeader(title: "Популярные треки")
                     VStack(spacing: 12) {
-                        ForEach(popularTracks, id: \.trackName) { track in
-                            TrackChartRow(track: track)
-                        }
+ //                       ForEach(popularTracks, id: \.trackName) { track in
+ //                           TrackChartRow(track: track)
+ //                       }
                     }
                     .padding(.horizontal)
                     
