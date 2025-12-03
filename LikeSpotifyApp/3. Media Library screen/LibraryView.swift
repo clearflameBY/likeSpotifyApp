@@ -1,70 +1,189 @@
 import SwiftUI
 
 struct LibraryView: View {
-    // TODO: заменить мок-данные на реальные из модели пользователя
-//    let likedTracks: [Track] = [
-//        Track(trackName: "Shape of You", performerName: "Ed Sheeran", albumName: "Divide", duration: "3:53"),
-//        Track(trackName: "Believer", performerName: "Imagine Dragons", albumName: "Evolve", duration: "3:24")
-//    ]
-//    let userPlaylists: [Playlist] = [
-//        Playlist(name: "Workout", description: "Энергичные треки для тренировки", trackList: []),
-//        Playlist(name: "Chill", description: "Спокойная музыка для отдыха", trackList: [])
-//    ]
-//    let downloadedTracks: [Track] = [
-//        Track(trackName: "Sunflower", performerName: "Post Malone", albumName: "Hollywood's Bleeding", duration: "2:38")
-//    ]
-//    let listeningHistory: [Track] = [
-//        Track(trackName: "Bad Guy", performerName: "Billie Eilish", albumName: "When We All Fall Asleep", duration: "3:14")
-//    ]
+    @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var soundtracks: Playlist?
+    
+    @State private var historyTracks: [Track] = []
+    private let historyService = HistoryService()
+    
+    // Избранные (реальное время)
+    @State private var favoriteTracks: [Track] = []
+    private let favoritesService = FavoritesService()
+    
+    // Скачанные (реальное время)
+    @State private var downloads: [DownloadEntry] = []
+    private let downloadService = OfflineDownloadService()
+    
+    // Плеер
+    @State private var isShowingPlayer = false
+    @State private var selectedTrack: Track?
+    @State private var selectedURL: URL?
+    
+    private let playlistService = PlaylistService()
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 32) {
-                    
-                    // Лайкнутые треки
-                    SectionHeader(title: "Понравившиеся")
-                    VStack(spacing: 8) {
-//                        ForEach(likedTracks, id: \.trackName) { track in
-//                            TrackChartRow(track: track)
-//                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Плейлисты пользователя
-                    SectionHeader(title: "Мои плейлисты")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-//                            ForEach(userPlaylists, id: \.name) { playlist in
-//                                PlaylistCard(playlist: playlist)
-//                            }
+            List {
+                // Понравившиеся
+                Section(header: Text("Понравившиеся")) {
+                    if favoriteTracks.isEmpty {
+                        Text("Пока пусто")
+                            .foregroundColor(.secondary)
+                    } else {
+                        ForEach(favoriteTracks, id: \.id) { track in
+                            Button {
+                                selectedTrack = track
+                                selectedURL = URL(string: track.audioURL)
+                                isShowingPlayer = selectedURL != nil
+                            } label: {
+                                TrackChartRow(track: track)
+                            }
+                            .buttonStyle(.plain)
                         }
-                        .padding(.horizontal)
                     }
-                    
-                    // Скачанные треки
-                    SectionHeader(title: "Скачанные для офлайн")
-                    VStack(spacing: 8) {
-//                        ForEach(downloadedTracks, id: \.trackName) { track in
-//                            TrackChartRow(track: track)
-//                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // История прослушиваний
-                    SectionHeader(title: "История прослушивания")
-                    VStack(spacing: 8) {
-//                        ForEach(listeningHistory, id: \.trackName) { track in
-//                            TrackChartRow(track: track)
-//                        }
-                    }
-                    .padding(.horizontal)
                 }
-                .padding(.vertical)
+                
+                // Скачанные для офлайн
+                Section(header: Text("Скачанные для офлайн")) {
+                    if downloads.isEmpty {
+                        Text("Пока пусто")
+                            .foregroundColor(.secondary)
+                    } else {
+                        ForEach(downloads, id: \.id) { entry in
+                            Button {
+                                // Локальный файл
+                                let fileURL = URL(fileURLWithPath: entry.localPath)
+                                // Собираем Track для PlayerView (можно хранить и весь Track в DownloadEntry, но мы сохранили метаданные)
+                                let t = Track(
+                                    id: entry.trackID,
+                                    trackName: entry.title,
+                                    performerName: entry.artist,
+                                    albumName: entry.album,
+                                    duration: "--:--",
+                                    audioURL: fileURL.absoluteString,
+                                    coverArtURL: entry.coverArtURL
+                                )
+                                selectedTrack = t
+                                selectedURL = fileURL
+                                isShowingPlayer = true
+                            } label: {
+                                // Переиспользуем TrackChartRow, собрав временный Track (для UI)
+                                let t = Track(
+                                    id: entry.trackID,
+                                    trackName: entry.title,
+                                    performerName: entry.artist,
+                                    albumName: entry.album,
+                                    duration: "--:--",
+                                    audioURL: entry.localPath,
+                                    coverArtURL: entry.coverArtURL
+                                )
+                                TrackChartRow(track: t)
+                            }
+                            .buttonStyle(.plain)
+                            .swipeActions {
+                                Button(role: .destructive) {
+                                    Task { try? await downloadService.removeDownload(trackID: entry.trackID) }
+                                } label: {
+                                    Label("Удалить", systemImage: "trash")
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Мои плейлисты (как было)
+                Section(header: Text("Мои плейлисты")) {
+                    if let soundtracks {
+                        NavigationLink {
+                            PlaylistDetailView(playlistName: soundtracks.name)
+                        } label: {
+                            HStack {
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.blue.opacity(0.25))
+                                    .frame(width: 54, height: 54)
+                                    .overlay(
+                                        Image(systemName: "music.note.list")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: 24, height: 24)
+                                            .foregroundColor(.blue)
+                                    )
+                                VStack(alignment: .leading) {
+                                    Text(soundtracks.name)
+                                        .font(.headline)
+                                    Text("\(soundtracks.tracksIDs.count) треков")
+                                        .font(.subheadline)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                            }
+                        }
+                    } else if isLoading {
+                        HStack {
+                            ProgressView()
+                            Text("Загрузка плейлиста…")
+                        }
+                    } else if let errorMessage {
+                        Text(errorMessage)
+                            .foregroundColor(.red)
+                    } else {
+                        Text("Плейлист не найден")
+                            .foregroundColor(.secondary)
+                    }
+                }
+                
+                // История прослушиваний
+                Section(header: Text("История прослушивания")) {
+                    ForEach(historyTracks, id: \.trackName) { track in
+                        TrackChartRow(track: track)
+                    }
+                }
             }
             .navigationTitle("Медиатека")
+            .task {
+                await loadSoundtracks()
+            }
+            .onAppear {
+                favoritesService.observeFavorites { tracks in
+                    DispatchQueue.main.async { self.favoriteTracks = tracks }
+                }
+                downloadService.observeDownloads { entries in
+                    DispatchQueue.main.async { self.downloads = entries }
+                }
+                historyService.observeHistory(limit: 50) { tracks in
+                  DispatchQueue.main.async { self.historyTracks = tracks }
+
+                }
+            }
+            .onDisappear {
+                favoritesService.stopObserving()
+                downloadService.stopObserving()
+                historyService.stopObserving()
+            }
+            .sheet(isPresented: $isShowingPlayer) {
+                if let track = selectedTrack, let url = selectedURL {
+                    PlayerView(track: track, url: url)
+                }
+            }
+        }
+    }
+    
+    @MainActor
+    private func loadSoundtracks() async {
+        guard !isLoading else { return }
+        isLoading = true
+        defer { isLoading = false }
+        
+        do {
+            self.soundtracks = try await playlistService.getPlaylist(named: "Soundtracks")
+        } catch {
+            self.errorMessage = error.localizedDescription
         }
     }
 }
 
-// Используй существующие компоненты SectionHeader, TrackChartRow, PlaylistCard
+#Preview {
+    LibraryView()
+}

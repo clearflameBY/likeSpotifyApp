@@ -1,11 +1,11 @@
 import FirebaseFirestore
 
 struct Track: Identifiable, Codable {
-    @DocumentID var id: String?           // Firestore document ID
+    @DocumentID var id: String?        
     var trackName: String
     var performerName: String
     var albumName: String?
     var duration: String
-    var audioURL: String                  // Ссылка на аудиофайл
-    var coverArtURL: String?              // Ссылка на картинку
+    var audioURL: String
+    var coverArtURL: String?
 }

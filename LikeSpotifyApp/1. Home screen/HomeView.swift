@@ -2,155 +2,144 @@ import SwiftUI
 
 struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
+    @State private var selectedTrack: Track?
+    @State private var isShowingPlayer = false
+    
+    // Genre navigation state
+    @State private var isShowingGenre = false
+    @State private var selectedGenre: Genre?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-
-                    // Поиск
-                    NavigationLink(destination: SearchView()) {
-                        HStack {
-                            Image(systemName: "magnifyingglass")
-                            Text("Поиск по всей библиотеке")
-                                .foregroundColor(.secondary)
-                            Spacer()
+                    // Поисковая строка с автодополнением
+                    if viewModel.isSearching {
+                        ProgressView("Поиск треков...")
+                            .padding()
+                    }
+                    if !viewModel.searchResults.isEmpty {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(viewModel.searchResults, id: \.id) { track in
+                                Button {
+                                    selectedTrack = track
+                                    isShowingPlayer = true
+                                } label: {
+                                    TrackChartRow(track: track)
+                                }
+                                .buttonStyle(.plain)
+                                Divider()
+                            }
                         }
-                        .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color(.systemBackground))
                         .cornerRadius(12)
-                        .padding(.horizontal)
+                        .padding([.horizontal, .top])
                     }
 
-                    // Снова играет
-                    SectionHeaderForHomeView(title: "Снова играет")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-//                            ForEach($viewModel.tracks, id: \.trackName) { playlist in
-//                                PlaylistCard(playlist: HomeView)
-//                            }
+                    // Основной контент только если не идёт поиск
+                    if viewModel.searchResults.isEmpty && !viewModel.isSearching {
+                        // Снова играет
+                        SectionHeaderForHomeView(title: "Снова играет")
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(viewModel.tracks, id: \.trackName) { track in
+                                    Button {
+                                        selectedTrack = track
+                                        isShowingPlayer = true
+                                    } label: {
+                                        TrackCard(track: track)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
-                    }
 
-                    // Новые релизы
-                    SectionHeaderForHomeView(title: "Новые релизы")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-//                            ForEach(viewModel.newReleases, id: \.name) { playlist in
-//                                PlaylistCard(playlist: playlist)
-//                            }
+                        // Новые релизы — показываем конкретные треки по ID
+                        SectionHeaderForHomeView(title: "Новые релизы")
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(viewModel.newReleaseTracks, id: \.id) { track in
+                                    Button {
+                                        selectedTrack = track
+                                        isShowingPlayer = true
+                                    } label: {
+                                        TrackCard(track: track)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal)
                         }
-                        .padding(.horizontal)
-                    }
 
-                    // Рекомендации по жанрам
-                    SectionHeaderForHomeView(title: "Рекомендации по жанрам")
-//                    GenreGrid(genres: viewModel.recommendedGenres)
-
-                    // Недавно прослушанные треки
-                    SectionHeaderForHomeView(title: "Недавно прослушанные треки")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 16) {
-//                            ForEach(viewModel.recentTracks, id: \.trackName) { track in
-//                                TrackCard(track: track)
-//                            }
+                        // Рекомендации по жанрам
+                        SectionHeaderForHomeView(title: "Рекомендации по жанрам")
+                        GenreGrid(genres: $viewModel.recommendedGenres) { genre in
+                            selectedGenre = genre
+                            isShowingGenre = true
                         }
-                        .padding(.horizontal)
+
+                        // Недавно прослушанные треки
+                        SectionHeaderForHomeView(title: "Недавно прослушанные треки")
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(viewModel.recentlyPlayed, id: \.trackName) { track in
+                                    Button {
+                                        selectedTrack = track
+                                        isShowingPlayer = true
+                                    } label: {
+                                        TrackCard(track: track)
+                                    }
+                                    .buttonStyle(.plain)
+                                }
+                            }
+                            .padding(.horizontal)
+                        }
                     }
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("")
-            .navigationBarHidden(true)
-        }
-    }
-}
-
-// MARK: - SectionHeader
-
-struct SectionHeaderForHomeView: View {
-    let title: String
-    var body: some View {
-        Text(title)
-            .font(.title2)
-            .bold()
-            .padding(.horizontal)
-    }
-}
-
-// MARK: - PlaylistCard
-
-struct PlaylistCard: View {
-    let playlist: Playlist
-
-    var body: some View {
-        VStack(alignment: .leading) {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.blue.opacity(0.3))
-                .frame(width: 140, height: 140)
-                .overlay(
-                    Image(systemName: "music.note.list")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 40, height: 40)
-                        .foregroundColor(.blue)
-                )
-            Text(playlist.name)
-                .font(.headline)
-                .lineLimit(1)
- //           Text("\(playlist.trackList.count) треков")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-        }
-        .frame(width: 140)
-    }
-}
-
-// MARK: - GenreGrid
-
-struct GenreGrid: View {
-    let genres: [Genre]
-    private let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 12), count: 3)
-
-    var body: some View {
-        LazyVGrid(columns: columns, spacing: 16) {
-            ForEach(genres, id: \.rawValue) { genre in
-                Text(genre.rawValue.capitalized)
-                    .font(.subheadline)
-                    .padding()
-                    .background(Color.green.opacity(0.2))
-                    .cornerRadius(8)
+            .navigationTitle("Главная")
+            // Modern navigation API for boolean-driven navigation
+            .navigationDestination(isPresented: $isShowingGenre) {
+                if let g = selectedGenre {
+                    GenreTracksView(title: GenreGrid.displayName(for: g),
+                                    trackIDs: genreIDs(for: g))
+                } else {
+                    EmptyView()
+                }
+            }
+            .task {
+                viewModel.fetchTracks()
+                // подставляем ваши 4 ID
+                viewModel.fetchNewReleaseTracks(ids: [
+                    "RJy9hk1CeMbnFRpOwVay",
+                    "P6qLWu9bmjGZROttdHbC",
+                    "Po9MqR3SWt6PAh1DOXAk",
+                    "VVmzuI7kFpluAhi0SVqp"
+                ])
+                //$viewModel.startObservingHistory(limit: 20)
+            }
+            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск по артисту и названию")
+            .onChange(of: viewModel.searchText) { _ in
+                viewModel.searchTracks()
+            }
+            .sheet(isPresented: $isShowingPlayer) {
+                if let track = selectedTrack, let url = URL(string: track.audioURL) {
+                    PlayerView(track: track, url: url)
+                }
             }
         }
-        .padding(.horizontal)
     }
-}
-
-// MARK: - TrackCard
-
-struct TrackCard: View {
-    let track: Track
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color.orange.opacity(0.25))
-                .frame(width: 120, height: 120)
-                .overlay(
-                    Image(systemName: "music.note")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 30, height: 30)
-                        .foregroundColor(.orange)
-                )
-            Text(track.trackName)
-                .font(.headline)
-                .lineLimit(1)
-            Text(track.performerName)
-                .font(.caption)
-                .foregroundColor(.secondary)
+    
+    private func genreIDs(for genre: Genre) -> [String] {
+        switch genre {
+        case .soundtrack:
+            return ["flTqu7xJksgIQsmdN0zz", "nzzzRbQPWAIvfmdwXjk6", "udm3uQL1KP8MxwIqqr38"]
+        case .heavyMetal:
+            return ["LZEUTZFOZC8c1cxDKpkj"]
+        case .alternativeRock:
+            return ["Gggrb7W9p4lIsWrwRPwv"]
         }
-        .frame(width: 120)
     }
 }
