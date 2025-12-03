@@ -4,10 +4,14 @@ struct HomeView: View {
     @StateObject private var viewModel = HomeViewModel()
     @State private var selectedTrack: Track?
     @State private var isShowingPlayer = false
-    
+
     // Genre navigation state
     @State private var isShowingGenre = false
     @State private var selectedGenre: Genre?
+
+    // История прослушивания
+    @State private var historyTracks: [Track] = []
+    private let historyService = HistoryService()
 
     var body: some View {
         NavigationStack {
@@ -79,11 +83,11 @@ struct HomeView: View {
                             isShowingGenre = true
                         }
 
-                        // Недавно прослушанные треки
-                        SectionHeaderForHomeView(title: "Недавно прослушанные треки")
+                        // История прослушивания (горизонтально!)
+                        SectionHeaderForHomeView(title: "История прослушивания")
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
-                                ForEach(viewModel.recentlyPlayed, id: \.trackName) { track in
+                                ForEach(historyTracks, id: \.id) { track in
                                     Button {
                                         selectedTrack = track
                                         isShowingPlayer = true
@@ -95,12 +99,13 @@ struct HomeView: View {
                             }
                             .padding(.horizontal)
                         }
+
+                        // (можете оставить или убрать старую секцию "Недавно прослушанные треки")
                     }
                 }
                 .padding(.vertical)
             }
             .navigationTitle("Главная")
-            // Modern navigation API for boolean-driven navigation
             .navigationDestination(isPresented: $isShowingGenre) {
                 if let g = selectedGenre {
                     GenreTracksView(title: GenreGrid.displayName(for: g),
@@ -111,14 +116,18 @@ struct HomeView: View {
             }
             .task {
                 viewModel.fetchTracks()
-                // подставляем ваши 4 ID
                 viewModel.fetchNewReleaseTracks(ids: [
                     "RJy9hk1CeMbnFRpOwVay",
                     "P6qLWu9bmjGZROttdHbC",
                     "Po9MqR3SWt6PAh1DOXAk",
                     "VVmzuI7kFpluAhi0SVqp"
                 ])
-                //$viewModel.startObservingHistory(limit: 20)
+                historyService.observeHistory(limit: 20) { tracks in
+                    DispatchQueue.main.async { self.historyTracks = tracks }
+                }
+            }
+            .onDisappear {
+                historyService.stopObserving()
             }
             .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск по артисту и названию")
             .onChange(of: viewModel.searchText) { _ in
@@ -131,7 +140,7 @@ struct HomeView: View {
             }
         }
     }
-    
+
     private func genreIDs(for genre: Genre) -> [String] {
         switch genre {
         case .soundtrack:
