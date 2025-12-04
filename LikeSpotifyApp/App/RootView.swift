@@ -5,13 +5,13 @@ struct RootView: View {
 
     var body: some View {
         Group {
- //           if auth.isLoggedIn {
+            if auth.isLoggedIn {
                 ContentView()
                     .environmentObject(auth)
- //           } else {
- //               LoginOrSignUpView()
-  //                  .environmentObject(auth)
-  //          }
+            } else {
+                LoginOrSignUpView()
+                    .environmentObject(auth)
+            }
         }
     }
 }
