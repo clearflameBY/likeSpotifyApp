@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LoginOrSignUpView: View {
-    @EnvironmentObject private var authService: AuthService
+    @EnvironmentObject private var viewModel: LoginOrSignUpViewModel
 
     @State private var isLogin = true
     @State private var email = ""
@@ -41,7 +41,7 @@ struct LoginOrSignUpView: View {
                 .foregroundColor(.white)
                 .padding(.horizontal)
 
-                if let error = authService.errorMessage {
+                if let error = viewModel.errorMessage {
                     Text(error)
                         .foregroundColor(.red)
                         .font(.callout)
@@ -50,14 +50,10 @@ struct LoginOrSignUpView: View {
 
                 Button {
                     Task {
-                        do {
-                            if isLogin {
-                                try await authService.signIn(withEmail: email, password: password)
-                            } else {
-                                try await authService.createUser(withEmail: email, password: password)
-                            }
-                        } catch {
-                            print(error.localizedDescription) 
+                        if isLogin {
+                            await viewModel.signIn(withEmail: email, password: password)
+                        } else {
+                            await viewModel.createUser(withEmail: email, password: password)
                         }
                     }
                 } label: {
@@ -72,11 +68,11 @@ struct LoginOrSignUpView: View {
                     .foregroundColor(.black)
                     .cornerRadius(12)
                 }
-                .disabled(authService.isLoading || email.isEmpty || password.isEmpty || (!isLogin && email.isEmpty))
+                .disabled(viewModel.isLoading || email.isEmpty || password.isEmpty)
 
                 Button(isLogin ? "Нет аккаунта? Зарегистрируйтесь" : "Уже есть аккаунт? Войти") {
                     withAnimation { isLogin.toggle() }
-                    authService.errorMessage = nil
+                    viewModel.clearError()
                 }
                 .foregroundColor(.green)
                 .font(.callout)
@@ -84,7 +80,7 @@ struct LoginOrSignUpView: View {
             }
             .padding()
             .overlay(
-                authService.isLoading ? ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .green)) : nil
+                viewModel.isLoading ? ProgressView().progressViewStyle(CircularProgressViewStyle(tint: .green)) : nil
             )
         }
     }

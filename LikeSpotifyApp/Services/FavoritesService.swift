@@ -3,9 +3,9 @@ import FirebaseFirestore
 import FirebaseStorage
 
 struct FavoriteEntry: Identifiable, Codable {
-    @DocumentID var id: String?           // document id в favorites
-    var trackID: String?                  // id оригинального трека (если есть)
-    var track: Track                      // копия трека на момент добавления
+    @DocumentID var id: String?
+    var trackID: String?
+    var track: Track
     var createdAt: Date
 }
 
@@ -18,7 +18,6 @@ final class FavoritesService {
         db.collection("favorites")
     }
 
-    // Добавить трек в избранное
     func add(track: Track) async throws {
         var entry = FavoriteEntry(
             id: nil,
@@ -26,12 +25,10 @@ final class FavoritesService {
             track: track,
             createdAt: Date()
         )
-        // Если в track audio/cover указаны относительные пути Storage, разрешим их
         entry.track = try await resolveStorageURLs(for: entry.track)
         _ = try collection.addDocument(from: entry)
     }
 
-    // Удалить из избранного по trackID (если хранили trackID)
     func remove(byTrackID trackID: String) async throws {
         let snapshot = try await collection.whereField("trackID", isEqualTo: trackID).getDocuments()
         for doc in snapshot.documents {
@@ -39,13 +36,11 @@ final class FavoritesService {
         }
     }
 
-    // Проверить, является ли трек избранным
     func isFavorite(trackID: String) async throws -> Bool {
         let snapshot = try await collection.whereField("trackID", isEqualTo: trackID).limit(to: 1).getDocuments()
         return snapshot.documents.first != nil
     }
 
-    // Подписка на все избранные треки (реальное время)
     func observeFavorites(onChange: @escaping ([Track]) -> Void) {
         listener?.remove()
         listener = collection
@@ -74,18 +69,15 @@ final class FavoritesService {
         listener = nil
     }
 
-    // Разрешение Storage путей в HTTPS для одного трека
     private func resolveStorageURLs(for track: Track) async throws -> Track {
         var out = track
 
-        // audio
         if !out.audioURL.lowercased().hasPrefix("http://") && !out.audioURL.lowercased().hasPrefix("https://") {
             let ref = storage.reference(withPath: out.audioURL)
             let url = try await ref.downloadURL()
             out.audioURL = url.absoluteString
         }
 
-        // cover
         if let cover = out.coverArtURL, !cover.isEmpty,
            !cover.lowercased().hasPrefix("http://"), !cover.lowercased().hasPrefix("https://") {
             let ref = storage.reference(withPath: cover)

@@ -9,10 +9,8 @@ final class SearchViewModel : ObservableObject {
     @Published var isSearching: Bool = false
     @Published var searchResults: [Track] = []
     
-    // Популярные треки
     @Published var popularTracks: [Track] = []
     
-    // Новые исполнители
     @Published var artists: [Artists] = []
     
     private let trackService = TrackService()

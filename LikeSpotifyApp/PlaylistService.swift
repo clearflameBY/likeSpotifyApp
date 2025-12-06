@@ -7,7 +7,6 @@ final class PlaylistService {
     private let db = Firestore.firestore()
     private let storage = Storage.storage()
     
-    // Получить плейлист по имени (например, "Soundtracks")
     func getPlaylist(named name: String) async throws -> Playlist? {
         let snapshot = try await db.collection("playlists")
             .whereField("name", isEqualTo: name)
@@ -19,7 +18,6 @@ final class PlaylistService {
             return nil
         }
         
-        // Печатаем сырые данные документа для диагностики
         let rawData = doc.data()
         print("[PlaylistService] Raw playlist document data for '\(name)': \(rawData)")
         
@@ -50,11 +48,9 @@ final class PlaylistService {
         }
     }
     
-    // Загрузить треки по trackIDs из плейлиста
     func getTracks(for playlist: Playlist) async throws -> [Track] {
         guard !playlist.tracksIDs.isEmpty else { return [] }
         
-        // Firestore не поддерживает in-запрос на >10 элементов за раз, но начнем просто.
         let chunks = playlist.tracksIDs.chunked(into: 10)
         var allTracks: [Track] = []
         
@@ -66,7 +62,6 @@ final class PlaylistService {
                 do {
                     return try doc.data(as: Track.self)
                 } catch {
-                    // Диагностика ошибок декодирования треков
                     let raw = doc.data()
                     print("[PlaylistService] Failed to decode Track with id \(doc.documentID). Raw: \(raw), error: \(error)")
                     return nil
@@ -75,15 +70,11 @@ final class PlaylistService {
             allTracks.append(contentsOf: tracks)
         }
         
-        // Разрешить имена файлов в Firebase Storage в реальные HTTPS URL,
-        // чтобы AVPlayer и AsyncImage смогли использовать.
         let resolved = try await resolveStorageURLs(for: allTracks)
         return resolved
     }
     
-    // MARK: - Helpers
     
-    // Преобразует track.audioURL и track.coverArtURL (имена в Storage) в downloadURL.absoluteString
     private func resolveStorageURLs(for tracks: [Track]) async throws -> [Track] {
         try await withThrowingTaskGroup(of: (Int, String?, String?).self) { group in
             for (index, track) in tracks.enumerated() {
@@ -91,7 +82,6 @@ final class PlaylistService {
                 let coverPath = track.coverArtURL
                 
                 group.addTask { [storage] in
-                    // audio
                     let resolvedAudio: String?
                     if audioPath.lowercased().hasPrefix("http://") || audioPath.lowercased().hasPrefix("https://") {
                         resolvedAudio = audioPath
@@ -106,7 +96,6 @@ final class PlaylistService {
                         }
                     }
                     
-                    // cover
                     var resolvedCover: String?
                     if let coverPath, !coverPath.isEmpty {
                         if coverPath.lowercased().hasPrefix("http://") || coverPath.lowercased().hasPrefix("https://") {

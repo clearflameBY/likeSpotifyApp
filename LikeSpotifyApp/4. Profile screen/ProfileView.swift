@@ -1,13 +1,13 @@
 import SwiftUI
 
 struct ProfileView: View {
-    @EnvironmentObject private var authService: AuthService
+    @EnvironmentObject private var viewModel: LoginOrSignUpViewModel
 
     let followers = 120
     let following = 45
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
                     Image(systemName: "person.crop.circle.fill")
@@ -16,7 +16,7 @@ struct ProfileView: View {
                         .foregroundColor(.green)
                         .padding(.top, 32)
                     
-                    Text(authService.userEmail ?? "Нет email")
+                    Text(viewModel.userEmail ?? "Нет email")
                         .foregroundColor(.secondary)
                         .font(.subheadline)
                     
@@ -86,7 +86,7 @@ struct ProfileView: View {
                         }
                         
                         Button(role: .destructive, action: {
-                            authService.logout()
+                            viewModel.logout()
                         }) {
                             HStack {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")

@@ -4,20 +4,19 @@ struct PlayerView: View {
     let track: Track
     let url: URL
     
-    @StateObject private var vm = PlayerViewModel()
+    @EnvironmentObject private var playerVM: PlayerViewModel
+    
     @State private var isFavorite = false
     private let favoritesService = FavoritesService()
     private let historyService = HistoryService()
     @State private var didLogPlay = false
     
-    // Offline
     private let downloadService = OfflineDownloadService()
     @State private var isDownloaded = false
     @State private var isDownloading = false
     
     var body: some View {
         VStack(spacing: 24) {
-            // Обложка
             if let cover = track.coverArtURL, let coverURL = URL(string: cover) {
                 AsyncImage(url: coverURL) { phase in
                     switch phase {
@@ -51,17 +50,36 @@ struct PlayerView: View {
                     .foregroundColor(.secondary)
             }
             
-            // Таймлайн
+            HStack(spacing: 28) {
+                Button {
+                    playerVM.toggleShuffle()
+                } label: {
+                    Image(systemName: "shuffle")
+                        .font(.title3)
+                        .foregroundColor(playerVM.shuffleEnabled ? .green : .primary)
+                }
+                .accessibilityLabel(playerVM.shuffleEnabled ? "Отключить перемешивание" : "Включить перемешивание")
+                
+                Button {
+                    playerVM.cycleRepeatMode()
+                } label: {
+                    Image(systemName: repeatIconName(for: playerVM.repeatMode))
+                        .font(.title3)
+                        .foregroundColor(playerVM.repeatMode == .off ? .primary : .green)
+                }
+                .accessibilityLabel("Режим повтора: \(playerVM.repeatMode.rawValue)")
+            }
+            
             VStack(spacing: 8) {
                 Slider(value: Binding(
-                    get: { vm.currentTime },
-                    set: { vm.seek(to: $0) }
-                ), in: 0...(vm.duration > 0 ? vm.duration : 1))
+                    get: { playerVM.currentTime },
+                    set: { playerVM.seek(to: $0) }
+                ), in: 0...(playerVM.duration > 0 ? playerVM.duration : 1))
                 
                 HStack {
-                    Text(formatTime(vm.currentTime))
+                    Text(formatTime(playerVM.currentTime))
                     Spacer()
-                    Text(formatTime(vm.duration))
+                    Text(formatTime(playerVM.duration))
                 }
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -70,37 +88,58 @@ struct PlayerView: View {
             
             HStack(spacing: 20) {
                 Button {
-                    vm.seek(to: max(vm.currentTime - 10, 0))
+                    playerVM.previous()
+                } label: {
+                    Image(systemName: "backward.end.fill")
+                        .font(.title2)
+                        .opacity(playerVM.canGoPrevious ? 1.0 : 0.4)
+                }
+                .disabled(!playerVM.canGoPrevious)
+                
+                Button {
+                    playerVM.seek(to: max(playerVM.currentTime - 10, 0))
                 } label: {
                     Image(systemName: "gobackward.10")
-                        .font(.title)
+                        .font(.title2)
                 }
                 
                 Button {
-                    vm.toggle()
+                    playerVM.toggle()
                 } label: {
-                    Image(systemName: vm.isPlaying ? "pause.circle.fill" : "play.circle.fill")
+                    Image(systemName: playerVM.isPlaying ? "pause.circle.fill" : "play.circle.fill")
                         .font(.system(size: 56))
                 }
                 
                 Button {
-                    vm.seek(to: min(vm.currentTime + 10, vm.duration))
+                    playerVM.seek(to: min(playerVM.currentTime + 10, playerVM.duration))
                 } label: {
                     Image(systemName: "goforward.10")
-                        .font(.title)
+                        .font(.title2)
                 }
                 
-                // Сердечко (избранное)
+                Button {
+                    playerVM.next()
+                } label: {
+                    Image(systemName: "forward.end.fill")
+                        .font(.title2)
+                        .opacity(playerVM.canGoNext ? 1.0 : 0.4)
+                }
+                .disabled(!playerVM.canGoNext)
+            }
+            
+            HStack(spacing: 24) {
                 Button {
                     Task { await toggleFavorite() }
                 } label: {
-                    Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        .font(.title2)
-                        .foregroundColor(isFavorite ? .red : .primary)
+                    HStack(spacing: 8) {
+                        Image(systemName: isFavorite ? "heart.fill" : "heart")
+                        Text(isFavorite ? "В избранном" : "В избранное")
+                    }
+                    .font(.callout)
+                    .foregroundColor(isFavorite ? .red : .primary)
                 }
                 .accessibilityLabel(isFavorite ? "Удалить из избранного" : "Добавить в избранное")
                 
-                // Скачивание (офлайн)
                 Button {
                     Task { await toggleDownload() }
                 } label: {
@@ -109,9 +148,12 @@ struct PlayerView: View {
                             .progressViewStyle(.circular)
                             .frame(width: 22, height: 22)
                     } else {
-                        Image(systemName: isDownloaded ? "arrow.down.circle.fill" : "arrow.down.circle")
-                            .font(.title2)
-                            .foregroundColor(isDownloaded ? .blue : .primary)
+                        HStack(spacing: 8) {
+                            Image(systemName: isDownloaded ? "arrow.down.circle.fill" : "arrow.down.circle")
+                            Text(isDownloaded ? "Скачано" : "Скачать")
+                        }
+                        .font(.callout)
+                        .foregroundColor(isDownloaded ? .blue : .primary)
                     }
                 }
                 .accessibilityLabel(isDownloaded ? "Удалить скачанный трек" : "Скачать трек")
@@ -121,19 +163,20 @@ struct PlayerView: View {
         }
         .padding()
         .onAppear {
-            vm.load(url: url)
-            vm.play()
+            playerVM.setTrackMetadata(track)
             Task {
                 if !didLogPlay {
-                    await historyService.logPlay(track: track)
-                    await MainActor.run { didLogPlay = true }
+                    if let current = playerVM.currentTrack {
+                        if current.id != nil, current.id == track.id ||
+                            (current.id == nil && current.trackName == track.trackName && current.performerName == track.performerName) {
+                            await historyService.logPlay(track: current)
+                            await MainActor.run { didLogPlay = true }
+                        }
+                    }
                 }
                 await refreshFavoriteState()
                 await refreshDownloadState()
             }
-        }
-        .onDisappear {
-            vm.pause()
         }
     }
     
@@ -150,6 +193,14 @@ struct PlayerView: View {
             )
     }
     
+    private func repeatIconName(for mode: PlayerViewModel.RepeatMode) -> String {
+        switch mode {
+        case .off: return "repeat"
+        case .all: return "repeat"
+        case .one: return "repeat.1"
+        }
+    }
+    
     private func formatTime(_ seconds: Double) -> String {
         guard seconds.isFinite else { return "--:--" }
         let s = Int(seconds) % 60
@@ -157,7 +208,6 @@ struct PlayerView: View {
         return String(format: "%02d:%02d", m, s)
     }
     
-    // MARK: - Favorites
     private func refreshFavoriteState() async {
         guard let id = track.id else {
             isFavorite = false
@@ -186,7 +236,6 @@ struct PlayerView: View {
         }
     }
     
-    // MARK: - Downloads
     private func refreshDownloadState() async {
         guard let id = track.id else {
             isDownloaded = false
@@ -219,4 +268,16 @@ struct PlayerView: View {
             print("[PlayerView] download error: \(error.localizedDescription)")
         }
     }
+}
+
+#Preview {
+    let sample = Track(id: "demo",
+                       trackName: "Demo Track",
+                       performerName: "Demo Artist",
+                       albumName: "Demo Album",
+                       duration: "03:30",
+                       audioURL: "https://example.com/audio.m4a",
+                       coverArtURL: nil)
+    return PlayerView(track: sample, url: URL(string: "https://example.com/audio.m4a")!)
+        .environmentObject(PlayerViewModel())
 }

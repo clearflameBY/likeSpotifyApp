@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct LibraryView: View {
+    @EnvironmentObject private var playerVM: PlayerViewModel
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var soundtracks: Playlist?
@@ -8,15 +9,12 @@ struct LibraryView: View {
     @State private var historyTracks: [Track] = []
     private let historyService = HistoryService()
     
-    // Избранные (реальное время)
     @State private var favoriteTracks: [Track] = []
     private let favoritesService = FavoritesService()
     
-    // Скачанные (реальное время)
     @State private var downloads: [DownloadEntry] = []
     private let downloadService = OfflineDownloadService()
     
-    // Плеер
     @State private var isShowingPlayer = false
     @State private var selectedTrack: Track?
     @State private var selectedURL: URL?
@@ -24,9 +22,8 @@ struct LibraryView: View {
     private let playlistService = PlaylistService()
     
     var body: some View {
-        NavigationStack {
+        NavigationView {
             List {
-                // Понравившиеся
                 Section(header: Text("Понравившиеся")) {
                     if favoriteTracks.isEmpty {
                         Text("Пока пусто")
@@ -34,6 +31,9 @@ struct LibraryView: View {
                     } else {
                         ForEach(favoriteTracks, id: \.id) { track in
                             Button {
+                                let list = favoriteTracks
+                                let idx = index(of: track, in: list)
+                                if let idx { playerVM.setQueue(list, startAt: idx) }
                                 selectedTrack = track
                                 selectedURL = URL(string: track.audioURL)
                                 isShowingPlayer = selectedURL != nil
@@ -45,7 +45,6 @@ struct LibraryView: View {
                     }
                 }
                 
-                // Скачанные для офлайн
                 Section(header: Text("Скачанные для офлайн")) {
                     if downloads.isEmpty {
                         Text("Пока пусто")
@@ -53,23 +52,34 @@ struct LibraryView: View {
                     } else {
                         ForEach(downloads, id: \.id) { entry in
                             Button {
-                                // Локальный файл
-                                let fileURL = URL(fileURLWithPath: entry.localPath)
-                                // Собираем Track для PlayerView (можно хранить и весь Track в DownloadEntry, но мы сохранили метаданные)
-                                let t = Track(
+                                let list: [Track] = downloads.map { e in
+                                    let fileURL = URL(fileURLWithPath: e.localPath)
+                                    return Track(
+                                        id: e.trackID,
+                                        trackName: e.title,
+                                        performerName: e.artist,
+                                        albumName: e.album,
+                                        duration: "--:--",
+                                        audioURL: fileURL.absoluteString,
+                                        coverArtURL: e.coverArtURL
+                                    )
+                                }
+                                let current = Track(
                                     id: entry.trackID,
                                     trackName: entry.title,
                                     performerName: entry.artist,
                                     albumName: entry.album,
                                     duration: "--:--",
-                                    audioURL: fileURL.absoluteString,
+                                    audioURL: URL(fileURLWithPath: entry.localPath).absoluteString,
                                     coverArtURL: entry.coverArtURL
                                 )
-                                selectedTrack = t
-                                selectedURL = fileURL
+                                let idx = index(of: current, in: list)
+                                if let idx { playerVM.setQueue(list, startAt: idx) }
+                                
+                                selectedTrack = current
+                                selectedURL = URL(fileURLWithPath: entry.localPath)
                                 isShowingPlayer = true
                             } label: {
-                                // Переиспользуем TrackChartRow, собрав временный Track (для UI)
                                 let t = Track(
                                     id: entry.trackID,
                                     trackName: entry.title,
@@ -93,7 +103,6 @@ struct LibraryView: View {
                     }
                 }
                 
-                // Мои плейлисты (как было)
                 Section(header: Text("Мои плейлисты")) {
                     if let soundtracks {
                         NavigationLink {
@@ -134,10 +143,19 @@ struct LibraryView: View {
                     }
                 }
                 
-                // История прослушиваний
                 Section(header: Text("История прослушивания")) {
                     ForEach(historyTracks, id: \.trackName) { track in
-                        TrackChartRow(track: track)
+                        Button {
+                            let list = historyTracks
+                            let idx = index(of: track, in: list)
+                            if let idx { playerVM.setQueue(list, startAt: idx) }
+                            selectedTrack = track
+                            selectedURL = URL(string: track.audioURL)
+                            isShowingPlayer = selectedURL != nil
+                        } label: {
+                            TrackChartRow(track: track)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
@@ -181,6 +199,13 @@ struct LibraryView: View {
         } catch {
             self.errorMessage = error.localizedDescription
         }
+    }
+    
+    private func index(of track: Track, in list: [Track]) -> Int? {
+        if let id = track.id {
+            return list.firstIndex(where: { $0.id == id })
+        }
+        return list.firstIndex(where: { $0.trackName == track.trackName && $0.performerName == track.performerName })
     }
 }
 

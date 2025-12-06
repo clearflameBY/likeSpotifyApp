@@ -1,18 +1,21 @@
 import SwiftUI
 
 struct RootView: View {
-    @StateObject private var auth = AuthService()
+    @StateObject private var viewModel: LoginOrSignUpViewModel
+
+    init() {
+        _viewModel = StateObject(wrappedValue: LoginOrSignUpViewModel(authService: AuthService()))
+    }
 
     var body: some View {
         Group {
-            if auth.isLoggedIn {
+            if viewModel.isLoggedIn {
                 ContentView()
-                    .environmentObject(auth)
             } else {
                 LoginOrSignUpView()
-                    .environmentObject(auth)
             }
         }
+        .environmentObject(viewModel)
     }
 }
 

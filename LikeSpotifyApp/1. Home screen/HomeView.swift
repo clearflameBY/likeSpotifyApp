@@ -1,23 +1,21 @@
 import SwiftUI
 
 struct HomeView: View {
+    @EnvironmentObject private var playerVM: PlayerViewModel
     @StateObject private var viewModel = HomeViewModel()
     @State private var selectedTrack: Track?
     @State private var isShowingPlayer = false
 
-    // Genre navigation state
     @State private var isShowingGenre = false
     @State private var selectedGenre: Genre?
 
-    // История прослушивания
     @State private var historyTracks: [Track] = []
     private let historyService = HistoryService()
 
     var body: some View {
-        NavigationStack {
+        NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Поисковая строка с автодополнением
                     if viewModel.isSearching {
                         ProgressView("Поиск треков...")
                             .padding()
@@ -26,6 +24,9 @@ struct HomeView: View {
                         VStack(alignment: .leading, spacing: 0) {
                             ForEach(viewModel.searchResults, id: \.id) { track in
                                 Button {
+                                    let list = viewModel.searchResults
+                                    let idx = index(of: track, in: list)
+                                    if let idx { playerVM.setQueue(list, startAt: idx) }
                                     selectedTrack = track
                                     isShowingPlayer = true
                                 } label: {
@@ -39,15 +40,15 @@ struct HomeView: View {
                         .cornerRadius(12)
                         .padding([.horizontal, .top])
                     }
-
-                    // Основной контент только если не идёт поиск
                     if viewModel.searchResults.isEmpty && !viewModel.isSearching {
-                        // Снова играет
                         SectionHeaderForHomeView(title: "Снова играет")
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
                                 ForEach(viewModel.tracks, id: \.trackName) { track in
                                     Button {
+                                        let list = viewModel.tracks
+                                        let idx = index(of: track, in: list)
+                                        if let idx { playerVM.setQueue(list, startAt: idx) }
                                         selectedTrack = track
                                         isShowingPlayer = true
                                     } label: {
@@ -59,12 +60,14 @@ struct HomeView: View {
                             .padding(.horizontal)
                         }
 
-                        // Новые релизы — показываем конкретные треки по ID
                         SectionHeaderForHomeView(title: "Новые релизы")
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
                                 ForEach(viewModel.newReleaseTracks, id: \.id) { track in
                                     Button {
+                                        let list = viewModel.newReleaseTracks
+                                        let idx = index(of: track, in: list)
+                                        if let idx { playerVM.setQueue(list, startAt: idx) }
                                         selectedTrack = track
                                         isShowingPlayer = true
                                     } label: {
@@ -76,19 +79,20 @@ struct HomeView: View {
                             .padding(.horizontal)
                         }
 
-                        // Рекомендации по жанрам
                         SectionHeaderForHomeView(title: "Рекомендации по жанрам")
                         GenreGrid(genres: $viewModel.recommendedGenres) { genre in
                             selectedGenre = genre
                             isShowingGenre = true
                         }
 
-                        // История прослушивания (горизонтально!)
                         SectionHeaderForHomeView(title: "История прослушивания")
                         ScrollView(.horizontal, showsIndicators: false) {
                             HStack(spacing: 16) {
                                 ForEach(historyTracks, id: \.id) { track in
                                     Button {
+                                        let list = historyTracks
+                                        let idx = index(of: track, in: list)
+                                        if let idx { playerVM.setQueue(list, startAt: idx) }
                                         selectedTrack = track
                                         isShowingPlayer = true
                                     } label: {
@@ -99,21 +103,25 @@ struct HomeView: View {
                             }
                             .padding(.horizontal)
                         }
-
-                        // (можете оставить или убрать старую секцию "Недавно прослушанные треки")
                     }
                 }
                 .padding(.vertical)
             }
             .navigationTitle("Главная")
-            .navigationDestination(isPresented: $isShowingGenre) {
-                if let g = selectedGenre {
-                    GenreTracksView(title: GenreGrid.displayName(for: g),
-                                    trackIDs: genreIDs(for: g))
-                } else {
-                    EmptyView()
-                }
-            }
+            .background(
+                NavigationLink(
+                    destination: Group {
+                        if let g = selectedGenre {
+                            GenreTracksView(title: GenreGrid.displayName(for: g),
+                                            trackIDs: genreIDs(for: g))
+                        } else {
+                            EmptyView()
+                        }
+                    },
+                    isActive: $isShowingGenre,
+                    label: { EmptyView() }
+                )
+            )
             .task {
                 viewModel.fetchTracks()
                 viewModel.fetchNewReleaseTracks(ids: [
@@ -150,5 +158,12 @@ struct HomeView: View {
         case .alternativeRock:
             return ["Gggrb7W9p4lIsWrwRPwv"]
         }
+    }
+    
+    private func index(of track: Track, in list: [Track]) -> Int? {
+        if let id = track.id {
+            return list.firstIndex(where: { $0.id == id })
+        }
+        return list.firstIndex(where: { $0.trackName == track.trackName && $0.performerName == track.performerName })
     }
 }

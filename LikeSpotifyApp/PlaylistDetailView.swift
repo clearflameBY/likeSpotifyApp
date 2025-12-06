@@ -17,8 +17,6 @@ struct PlaylistDetailView: View {
                     ForEach(tracks) { track in
                         Button {
                             if URL(string: track.audioURL) != nil {
-                                // Открываем плеер
-                                // Можно пушить, но удобнее презентовать модально
                                 selectedTrack = track
                                 isPresentingPlayer = true
                             }
@@ -66,11 +64,9 @@ struct PlaylistDetailView: View {
         }
     }
     
-    // MARK: - Player presentation state
     @State private var isPresentingPlayer = false
     @State private var selectedTrack: Track?
     
-    // MARK: - Loading
     @MainActor
     private func load() async {
         guard !isLoading else { return }

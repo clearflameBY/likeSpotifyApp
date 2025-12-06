@@ -18,10 +18,8 @@ final class HistoryService {
         db.collection("playHistory")
     }
     
-    // Записать факт прослушивания
     func logPlay(track: Track) async {
         var entry = HistoryEntry(id: nil, trackID: track.id, track: track, playedAt: Date())
-        // Разрешим Storage пути, если что
         entry.track = (try? await resolveStorageURLs(for: entry.track)) ?? track
         do {
             _ = try collection.addDocument(from: entry)
@@ -30,7 +28,6 @@ final class HistoryService {
         }
     }
     
-    // Наблюдать историю (последние сверху)
     func observeHistory(limit: Int = 50, onChange: @escaping ([Track]) -> Void) {
         listener?.remove()
         var query: Query = collection.order(by: "playedAt", descending: true)
@@ -59,7 +56,6 @@ final class HistoryService {
         listener = nil
     }
     
-    // MARK: - Helpers
     private func resolveStorageURLs(for track: Track) async throws -> Track {
         var out = track
         if !out.audioURL.lowercased().hasPrefix("http://") && !out.audioURL.lowercased().hasPrefix("https://") {

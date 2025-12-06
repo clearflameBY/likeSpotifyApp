@@ -14,7 +14,6 @@ final class HomeViewModel: ObservableObject {
     @Published var recentlyPlayed: [Track] = []
     private let historyService = HistoryService()
     
-    // Recommended genres shown on Home
     @Published var recommendedGenres: [Genre] = [.soundtrack, .heavyMetal, .alternativeRock]
     
     private let trackService = TrackService()

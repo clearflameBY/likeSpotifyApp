@@ -1,177 +1,197 @@
 import SwiftUI
 
 struct SearchView: View {
+    @EnvironmentObject private var playerVM: PlayerViewModel
     @StateObject private var viewModel = SearchViewModel()
     @State private var selectedTrack: Track?
     @State private var isShowingPlayer = false
     
-    // Примерные данные для остальных секций
     let genres = ["Поп", "Рок", "Хип-хоп", "Электроника", "Джаз", "Классика"]
     let newArtists = ["Olivia Rodrigo", "Doja Cat", "Glass Animals", "Lil Nas X"]
     
-    // Новые альбомы (локальная конфигурация).
-    // Если у вас есть точные trackIDs — заполните их, тогда загрузка пойдет через TrackService.getTracks(byIDs:).
-    // Если trackIDs пустые — экран альбома отфильтрует треки по albumName среди уже загруженных viewModel.tracks.
+    
     private let newAlbums: [AlbumItem] = [
         AlbumItem(
             title: "Грамадазнаўства",
-            coverURL: nil,
-            trackIDs: [] // TODO: подставить ID треков
+            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/ab67616d0000b273e5f5bb71188bfbc70c677c78.jpeg?alt=media&token=98db9bd5-54bf-4514-a284-9215cec640cd",
+            trackIDs: ["Gggrb7W9p4lIsWrwRPwv"]
         ),
         AlbumItem(
             title: "Stressed Out (Rock)",
-            coverURL: nil,
-            trackIDs: [] // TODO: подставить ID треков
+            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/486x486bb.png?alt=media&token=bbbbfcf3-d507-4998-96a1-650c1746fa91",
+            trackIDs: ["K6SW6MuC093MjbcwtNTh"]
         ),
         AlbumItem(
             title: "Paranoid",
             coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/Black_Sabbath_Paranoid_Cover_Art.png?alt=media&token=6aa9a1dd-f70e-49c9-a69f-728eab6169f5",
-            trackIDs: ["LZEUTZFOZC8c1cxDKpkj"] // TODO: подставить ID треков
+            trackIDs: ["LZEUTZFOZC8c1cxDKpkj"]
         ),
         AlbumItem(
             title: "Psy 6 (Six Rules), Part 1",
             coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/PSYBest6P1Cover.jpg?alt=media&token=aaa597f7-e9fe-45a9-b22b-16d1e25aa970",
-            trackIDs: [] // TODO: подставить ID треков
+            trackIDs: ["Po9MqR3SWt6PAh1DOXAk"]
         ),
         AlbumItem(
             title: "Rise Again",
-            coverURL: nil,
-            trackIDs: [] // TODO: подставить ID треков
+            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/600x600bf-60.jpg?alt=media&token=fbac5d87-7875-4010-9648-de761476e270",
+            trackIDs: ["RJy9hk1CeMbnFRpOwVay"]
         ),
         AlbumItem(
             title: "Keiner kommt klar mit mir",
             coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/5ae3edb0f85ef55e6e0ef1ede813d946.1000x1000x1.png?alt=media&token=1e663884-0de6-497d-a39a-cdfeb6ea7bc7",
-            trackIDs: [] // TODO: подставить ID треков
+            trackIDs: ["a1EYzPLnEXxW6Q1JxFXB"]
         ),
         AlbumItem(
             title: "Neue Deutsche Welle",
-            coverURL: nil,
-            trackIDs: [] // TODO: подставить ID треков
+            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/Fler-NDW%202005.mp3?alt=media&token=e8c13d36-cae0-4ca2-bf68-d83301b927fe",
+            trackIDs: ["b3EBY30wt4OZX6OvaqIA"]
         )
     ]
 
     @State private var pushAlbum: AlbumItem?
+    @State private var isShowingAlbum = false
 
     var body: some View {
-        NavigationStack {
-            if #available(iOS 17.0, *) {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 28) {
-                        // Поисковая строка с автодополнением
-                        if viewModel.isSearching {
-                            ProgressView("Поиск треков...")
-                                .padding()
-                        }
-                        if !viewModel.searchResults.isEmpty {
-                            VStack(alignment: .leading, spacing: 0) {
-                                ForEach(viewModel.searchResults, id: \.id) { track in
-                                    Button {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 28) {
+                    if viewModel.isSearching {
+                        ProgressView("Поиск треков...")
+                            .padding()
+                    }
+                    if !viewModel.searchResults.isEmpty {
+                        VStack(alignment: .leading, spacing: 0) {
+                            ForEach(viewModel.searchResults, id: \.id) { track in
+                                Button {
+                                    let list = viewModel.searchResults
+                                    if let idx = index(of: track, in: list) {
+                                        playerVM.setQueue(list, startAt: idx)
                                         selectedTrack = track
                                         isShowingPlayer = true
+                                    }
+                                } label: {
+                                    TrackChartRow(track: track)
+                                }
+                                .buttonStyle(.plain)
+                                Divider()
+                            }
+                        }
+                        .background(Color(.systemBackground))
+                        .cornerRadius(12)
+                        .padding([.horizontal, .top])
+                    }
+                    
+                    if viewModel.searchResults.isEmpty && !viewModel.isSearching {
+                        SectionHeader(title: "Жанры")
+                        GenreGridForSearch(genres: genres)
+                        
+                        if !viewModel.popularTracks.isEmpty {
+                            SectionHeader(title: "Популярные треки")
+                            VStack(spacing: 12) {
+                                ForEach(viewModel.popularTracks, id: \.id) { track in
+                                    Button {
+                                        let list = viewModel.popularTracks
+                                        if let idx = index(of: track, in: list) {
+                                            playerVM.setQueue(list, startAt: idx)
+                                            selectedTrack = track
+                                            isShowingPlayer = true
+                                        }
                                     } label: {
                                         TrackChartRow(track: track)
                                     }
                                     .buttonStyle(.plain)
-                                    Divider()
                                 }
                             }
-                            .background(Color(.systemBackground))
-                            .cornerRadius(12)
-                            .padding([.horizontal, .top])
+                            .padding(.horizontal)
                         }
                         
-                        // Основной контент только если не идёт поиск
-                        if viewModel.searchResults.isEmpty && !viewModel.isSearching {
-                            // Категории жанров
-                            SectionHeader(title: "Жанры")
-                            GenreGridForSearch(genres: genres)
-                            
-                            // Популярные треки (по заданным ID, кликабельные)
-                            if !viewModel.popularTracks.isEmpty {
-                                SectionHeader(title: "Популярные треки")
-                                VStack(spacing: 12) {
-                                    ForEach(viewModel.popularTracks, id: \.id) { track in
-                                        Button {
-                                            selectedTrack = track
-                                            isShowingPlayer = true
-                                        } label: {
-                                            TrackChartRow(track: track)
-                                        }
-                                        .buttonStyle(.plain)
+                        SectionHeader(title: "Новые альбомы")
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(newAlbums, id: \.title) { album in
+                                    Button {
+                                        pushAlbum = album
+                                        isShowingAlbum = true
+                                    } label: {
+                                        AlbumCard(album: album)
                                     }
+                                    .buttonStyle(.plain)
                                 }
-                                .padding(.horizontal)
                             }
-                            
-                            // Новые альбомы
-                            SectionHeader(title: "Новые альбомы")
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    ForEach(newAlbums, id: \.title) { album in
-                                        Button {
-                                            pushAlbum = album
-                                        } label: {
-                                            AlbumCard(album: album)
-                                        }
-                                        .buttonStyle(.plain)
+                            .padding(.horizontal)
+                        }
+                        
+                        SectionHeader(title: "Новые исполнители")
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 16) {
+                                ForEach(viewModel.artists, id: \.id) { artist in
+                                    NavigationLink {
+                                        ArtistDetailView(artist: artist)
+                                    } label: {
+                                        ArtistCardFromModel(artist: artist)
                                     }
+                                    .buttonStyle(.plain)
                                 }
-                                .padding(.horizontal)
                             }
-                            
-                            // Новые исполнители
-                            SectionHeader(title: "Новые исполнители")
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 16) {
-                                    ForEach(viewModel.artists, id: \.id) { artist in
-                                        NavigationLink {
-                                            ArtistDetailView(artist: artist)
-                                        } label: {
-                                            ArtistCardFromModel(artist: artist)
-                                        }
-                                        .buttonStyle(.plain)
-                                    }
-                                }
-                                .padding(.horizontal)
-                            }
+                            .padding(.horizontal)
                         }
                     }
-                    .padding(.bottom)
                 }
-                .navigationTitle("Поиск")
-                .navigationDestination(item: $pushAlbum) { album in
-                    AlbumTracksViewForSearch(
-                        album: album,
-                        allTracks: viewModel.tracks
-                    )
+                .padding(.bottom)
+            }
+            .navigationTitle("Поиск")
+            .background(
+                NavigationLink(
+                    destination: Group {
+                        if let album = pushAlbum {
+                            AlbumTracksViewForSearch(
+                                album: album,
+                                allTracks: viewModel.tracks
+                            )
+                        } else {
+                            EmptyView()
+                        }
+                    },
+                    isActive: $isShowingAlbum,
+                    label: { EmptyView() }
+                )
+            )
+            .task {
+                viewModel.fetchTracks()
+                await viewModel.fetchPopularTracksByIDs([
+                    "QjujWUfMcOhvinGbSrRz",
+                    "K6SW6MuC093MjbcwtNTh",
+                    "Po9MqR3SWt6PAh1DOXAk"
+                ])
+                viewModel.fetchArtists()
+            }
+            .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск по артисту и названию")
+            .onChange(of: viewModel.searchText) { _ in
+                viewModel.searchTracks()
+            }
+            .sheet(isPresented: $isShowingPlayer) {
+                if let track = selectedTrack, let url = urlFromAudioString(track.audioURL) {
+                    PlayerView(track: track, url: url)
                 }
-                .task {
-                    viewModel.fetchTracks()
-                    // грузим 3 конкретных трека для секции «Популярные треки»
-                    await viewModel.fetchPopularTracksByIDs([
-                        "QjujWUfMcOhvinGbSrRz",
-                        "K6SW6MuC093MjbcwtNTh",
-                        "Po9MqR3SWt6PAh1DOXAk"
-                    ])
-                    viewModel.fetchArtists()
-                }
-                .searchable(text: $viewModel.searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Поиск по артисту и названию")
-                .onChange(of: viewModel.searchText) { _ in
-                    viewModel.searchTracks()
-                }
-                .sheet(isPresented: $isShowingPlayer) {
-                    if let track = selectedTrack, let url = URL(string: track.audioURL) {
-                        PlayerView(track: track, url: url)
-                    }
-                }
-            } else {
-                // Fallback on earlier versions
             }
         }
     }
+    
+    private func urlFromAudioString(_ s: String) -> URL? {
+        if let u = URL(string: s), u.scheme != nil {
+            return u
+        }
+        return URL(fileURLWithPath: s)
+    }
+    
+    private func index(of track: Track, in list: [Track]) -> Int? {
+        if let id = track.id {
+            return list.firstIndex(where: { $0.id == id })
+        }
+        return list.firstIndex(where: { $0.trackName == track.trackName && $0.performerName == track.performerName })
+    }
 }
 
-// MARK: - Album model used on Search screen
 struct AlbumItem: Identifiable, Hashable {
     var id: String { title }
     let title: String
@@ -179,7 +199,6 @@ struct AlbumItem: Identifiable, Hashable {
     let trackIDs: [String]
 }
 
-// MARK: - AlbumCard for Search
 struct AlbumCard: View {
     let album: AlbumItem
 
@@ -231,8 +250,6 @@ struct AlbumCard: View {
     }
 }
 
-// MARK: - GenreGrid
-
 struct GenreGridForSearch: View {
     let genres: [String]
     private let columns: [GridItem] = Array(repeating: .init(.flexible(), spacing: 12), count: 2)
@@ -250,8 +267,6 @@ struct GenreGridForSearch: View {
         .padding(.horizontal)
     }
 }
-
-// MARK: - TrackChartRow
 
 struct TrackChartRow: View {
     let track: Track
@@ -312,10 +327,9 @@ struct TrackChartRow: View {
     }
 }
 
-// MARK: - AlbumTracksViewForSearch
-// Показывает треки альбома. Если есть trackIDs — грузим их через TrackService,
-// иначе фильтруем по album.title среди уже загруженных allTracks.
 struct AlbumTracksViewForSearch: View {
+    @EnvironmentObject private var playerVM: PlayerViewModel
+    
     let album: AlbumItem
     let allTracks: [Track]
     
@@ -332,7 +346,9 @@ struct AlbumTracksViewForSearch: View {
             Section(header: header) {
                 ForEach(tracks) { track in
                     Button {
-                        if URL(string: track.audioURL) != nil {
+                        let list = tracks
+                        if let idx = index(of: track, in: list) {
+                            playerVM.setQueue(list, startAt: idx)
                             selectedTrack = track
                             isPresentingPlayer = true
                         }
@@ -371,7 +387,7 @@ struct AlbumTracksViewForSearch: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .sheet(isPresented: $isPresentingPlayer) {
-            if let selectedTrack, let url = URL(string: selectedTrack.audioURL) {
+            if let selectedTrack, let url = urlFromAudioString(selectedTrack.audioURL) {
                 PlayerView(track: selectedTrack, url: url)
             }
         }
@@ -418,16 +434,27 @@ struct AlbumTracksViewForSearch: View {
                 let fetched = try await trackService.getTracks(byIDs: album.trackIDs)
                 self.tracks = fetched
             } else {
-                // Фолбэк: фильтруем уже загруженные треки по названию альбома
                 self.tracks = allTracks.filter { ($0.albumName ?? "").caseInsensitiveCompare(album.title) == .orderedSame }
             }
         } catch {
             self.errorMessage = error.localizedDescription
         }
     }
+    
+    private func index(of track: Track, in list: [Track]) -> Int? {
+        if let id = track.id {
+            return list.firstIndex(where: { $0.id == id })
+        }
+        return list.firstIndex(where: { $0.trackName == track.trackName && $0.performerName == track.performerName })
+    }
+    
+    private func urlFromAudioString(_ s: String) -> URL? {
+        if let u = URL(string: s), u.scheme != nil {
+            return u
+        }
+        return URL(fileURLWithPath: s)
+    }
 }
-
-// MARK: - ArtistCard
 
 struct ArtistCard: View {
     let artistName: String
@@ -451,8 +478,6 @@ struct ArtistCard: View {
         }
     }
 }
-
-// MARK: - SectionHeader
 
 struct SectionHeader: View {
     let title: String

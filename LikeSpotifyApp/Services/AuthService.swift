@@ -1,44 +1,32 @@
-import SwiftUI
-import Combine
 import FirebaseCore
 import FirebaseAuth
 
-@MainActor
-final class AuthService: ObservableObject {
-    
-    @Published var isLoggedIn: Bool = false
-    @Published var isLoading: Bool = false
-    @Published var errorMessage: String?
-    @Published var userEmail: String?
-
-    func signIn(withEmail email: String, password: String) async throws {
-        isLoading = true
-        defer { isLoading = false }
-        
+final class AuthService {
+    func signIn(withEmail email: String, password: String) async throws -> User {
         let data = try await Auth.auth().signIn(withEmail: email, password: password)
-        
-        isLoggedIn = true
-        userEmail = data.user.email
-        errorMessage = nil
+        return data.user
     }
-    
-    func createUser(withEmail email: String, password: String) async throws {
-        isLoading = true
-        defer { isLoading = false }
 
-        if !email.isEmpty && !password.isEmpty {
-            isLoggedIn = true
-            let data = try await Auth.auth().createUser(withEmail: email, password: password)
-            userEmail = data.user.email
-            print("signUp: \(data.user)")
-            errorMessage = nil
-        } else {
-            errorMessage = "Пожалуйста, заполните все поля"
+    func createUser(withEmail email: String, password: String) async throws -> User {
+        guard !email.isEmpty, !password.isEmpty else {
+            throw AuthError.emptyFields
         }
+        let data = try await Auth.auth().createUser(withEmail: email, password: password)
+        return data.user
     }
 
-    func logout() {
-        isLoggedIn = false
-        userEmail = nil                 
+    func logout() throws {
+        try Auth.auth().signOut()
+    }
+}
+
+enum AuthError: LocalizedError {
+    case emptyFields
+
+    var errorDescription: String? {
+        switch self {
+        case .emptyFields:
+            return "Пожалуйста, заполните все поля"
+        }
     }
 }
