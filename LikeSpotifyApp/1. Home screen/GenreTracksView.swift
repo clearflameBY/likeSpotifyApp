@@ -42,7 +42,7 @@ struct GenreTracksView: View {
         }
         .overlay {
             if isLoading {
-                ProgressView("Загрузка...")
+                ProgressView(String(format: NSLocalizedString("Загрузка...", comment: "")))
             } else if let errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)

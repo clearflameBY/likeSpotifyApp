@@ -5,7 +5,7 @@ struct ContentView: View {
         TabView {
             HomeView()
                 .tabItem {
-                    Label("Главная", systemImage: "music.note")
+                    Label(String(format: NSLocalizedString("Главная", comment: "")), systemImage: "music.note")
                 }
             
             SearchView()

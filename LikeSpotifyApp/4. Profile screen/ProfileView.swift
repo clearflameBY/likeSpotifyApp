@@ -25,7 +25,7 @@ struct ProfileView: View {
                             Text("\(followers)")
                                 .font(.title2)
                                 .bold()
-                            Text("Подписчики")
+                            Text(String(format: NSLocalizedString("subscribers", comment: "")))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -33,7 +33,7 @@ struct ProfileView: View {
                             Text("\(following)")
                                 .font(.title2)
                                 .bold()
-                            Text("Подписки")
+                            Text(String(format: NSLocalizedString("Подписки", comment: "")))
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -90,7 +90,7 @@ struct ProfileView: View {
                         }) {
                             HStack {
                                 Image(systemName: "rectangle.portrait.and.arrow.right")
-                                Text("Выйти")
+                                Text(String(format: NSLocalizedString("Выйти", comment: "")))
                                 Spacer()
                             }
                             .padding()

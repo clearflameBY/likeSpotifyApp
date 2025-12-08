@@ -58,7 +58,7 @@ struct PlayerView: View {
                         .font(.title3)
                         .foregroundColor(playerVM.shuffleEnabled ? .green : .primary)
                 }
-                .accessibilityLabel(playerVM.shuffleEnabled ? "Отключить перемешивание" : "Включить перемешивание")
+                .accessibilityLabel(playerVM.shuffleEnabled ? "Отключить перемешивание" : String(format: NSLocalizedString("Включить перемешивание", comment: "")))
                 
                 Button {
                     playerVM.cycleRepeatMode()
@@ -133,12 +133,12 @@ struct PlayerView: View {
                 } label: {
                     HStack(spacing: 8) {
                         Image(systemName: isFavorite ? "heart.fill" : "heart")
-                        Text(isFavorite ? "В избранном" : "В избранное")
+                        Text(isFavorite ? "В избранном" : String(format: NSLocalizedString("В избранное", comment: "")))
                     }
                     .font(.callout)
                     .foregroundColor(isFavorite ? .red : .primary)
                 }
-                .accessibilityLabel(isFavorite ? "Удалить из избранного" : "Добавить в избранное")
+                .accessibilityLabel(isFavorite ? "Удалить из избранного" : String(format: NSLocalizedString("Добавить в избранное", comment: "")))
                 
                 Button {
                     Task { await toggleDownload() }

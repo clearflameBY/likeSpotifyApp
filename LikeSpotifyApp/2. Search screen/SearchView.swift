@@ -12,40 +12,15 @@ struct SearchView: View {
     
     private let newAlbums: [AlbumItem] = [
         AlbumItem(
-            title: "Грамадазнаўства",
-            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/ab67616d0000b273e5f5bb71188bfbc70c677c78.jpeg?alt=media&token=98db9bd5-54bf-4514-a284-9215cec640cd",
-            trackIDs: ["Gggrb7W9p4lIsWrwRPwv"]
-        ),
-        AlbumItem(
-            title: "Stressed Out (Rock)",
-            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/486x486bb.png?alt=media&token=bbbbfcf3-d507-4998-96a1-650c1746fa91",
-            trackIDs: ["K6SW6MuC093MjbcwtNTh"]
-        ),
-        AlbumItem(
-            title: "Paranoid",
-            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/Black_Sabbath_Paranoid_Cover_Art.png?alt=media&token=6aa9a1dd-f70e-49c9-a69f-728eab6169f5",
-            trackIDs: ["LZEUTZFOZC8c1cxDKpkj"]
-        ),
-        AlbumItem(
-            title: "Psy 6 (Six Rules), Part 1",
-            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/PSYBest6P1Cover.jpg?alt=media&token=aaa597f7-e9fe-45a9-b22b-16d1e25aa970",
-            trackIDs: ["Po9MqR3SWt6PAh1DOXAk"]
+            title: "Velour",
+            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/vrtei_wjrec_velour_cover.webp?alt=media&token=7e9e3c23-06b2-460d-a8c6-a5b06386ef71",
+            trackIDs: ["9CHF5gebGjV9ZQqs6app"]
         ),
         AlbumItem(
             title: "Rise Again",
             coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/600x600bf-60.jpg?alt=media&token=fbac5d87-7875-4010-9648-de761476e270",
             trackIDs: ["RJy9hk1CeMbnFRpOwVay"]
         ),
-        AlbumItem(
-            title: "Keiner kommt klar mit mir",
-            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/5ae3edb0f85ef55e6e0ef1ede813d946.1000x1000x1.png?alt=media&token=1e663884-0de6-497d-a39a-cdfeb6ea7bc7",
-            trackIDs: ["a1EYzPLnEXxW6Q1JxFXB"]
-        ),
-        AlbumItem(
-            title: "Neue Deutsche Welle",
-            coverURL: "https://firebasestorage.googleapis.com/v0/b/akaspotifyapp.firebasestorage.app/o/Fler-NDW%202005.mp3?alt=media&token=e8c13d36-cae0-4ca2-bf68-d83301b927fe",
-            trackIDs: ["b3EBY30wt4OZX6OvaqIA"]
-        )
     ]
 
     @State private var pushAlbum: AlbumItem?
@@ -372,7 +347,7 @@ struct AlbumTracksViewForSearch: View {
         }
         .overlay {
             if isLoading {
-                ProgressView("Загрузка...")
+                ProgressView(String(format: NSLocalizedString("Загрузка...", comment: "")))
             } else if let errorMessage {
                 Text(errorMessage)
                     .foregroundColor(.red)

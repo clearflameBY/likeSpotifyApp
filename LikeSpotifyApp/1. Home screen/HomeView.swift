@@ -107,7 +107,7 @@ struct HomeView: View {
                 }
                 .padding(.vertical)
             }
-            .navigationTitle("Главная")
+            .navigationTitle(String(format: NSLocalizedString("Главная", comment: "")))
             .background(
                 NavigationLink(
                     destination: Group {
@@ -125,10 +125,8 @@ struct HomeView: View {
             .task {
                 viewModel.fetchTracks()
                 viewModel.fetchNewReleaseTracks(ids: [
-                    "RJy9hk1CeMbnFRpOwVay",
-                    "P6qLWu9bmjGZROttdHbC",
-                    "Po9MqR3SWt6PAh1DOXAk",
-                    "VVmzuI7kFpluAhi0SVqp"
+                    "9CHF5gebGjV9ZQqs6app",
+                    "oj0hmj7QSHw87HfUCwiH"
                 ])
                 historyService.observeHistory(limit: 20) { tracks in
                     DispatchQueue.main.async { self.historyTracks = tracks }

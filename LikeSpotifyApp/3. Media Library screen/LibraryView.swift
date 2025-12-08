@@ -2,37 +2,24 @@ import SwiftUI
 
 struct LibraryView: View {
     @EnvironmentObject private var playerVM: PlayerViewModel
-    @State private var isLoading = false
-    @State private var errorMessage: String?
-    @State private var soundtracks: Playlist?
-    
-    @State private var historyTracks: [Track] = []
-    private let historyService = HistoryService()
-    
-    @State private var favoriteTracks: [Track] = []
-    private let favoritesService = FavoritesService()
-    
-    @State private var downloads: [DownloadEntry] = []
-    private let downloadService = OfflineDownloadService()
+    @StateObject private var viewModel = LibraryViewModel()
     
     @State private var isShowingPlayer = false
     @State private var selectedTrack: Track?
     @State private var selectedURL: URL?
     
-    private let playlistService = PlaylistService()
-    
     var body: some View {
         NavigationView {
             List {
                 Section(header: Text("Понравившиеся")) {
-                    if favoriteTracks.isEmpty {
+                    if viewModel.favoriteTracks.isEmpty {
                         Text("Пока пусто")
                             .foregroundColor(.secondary)
                     } else {
-                        ForEach(favoriteTracks, id: \.id) { track in
+                        ForEach(viewModel.favoriteTracks, id: \.id) { track in
                             Button {
-                                let list = favoriteTracks
-                                let idx = index(of: track, in: list)
+                                let list = viewModel.favoriteTracks
+                                let idx = viewModel.index(of: track, in: list)
                                 if let idx { playerVM.setQueue(list, startAt: idx) }
                                 selectedTrack = track
                                 selectedURL = URL(string: track.audioURL)
@@ -46,13 +33,13 @@ struct LibraryView: View {
                 }
                 
                 Section(header: Text("Скачанные для офлайн")) {
-                    if downloads.isEmpty {
+                    if viewModel.downloads.isEmpty {
                         Text("Пока пусто")
                             .foregroundColor(.secondary)
                     } else {
-                        ForEach(downloads, id: \.id) { entry in
+                        ForEach(viewModel.downloads, id: \.id) { entry in
                             Button {
-                                let list: [Track] = downloads.map { e in
+                                let list: [Track] = viewModel.downloads.map { e in
                                     let fileURL = URL(fileURLWithPath: e.localPath)
                                     return Track(
                                         id: e.trackID,
@@ -73,9 +60,8 @@ struct LibraryView: View {
                                     audioURL: URL(fileURLWithPath: entry.localPath).absoluteString,
                                     coverArtURL: entry.coverArtURL
                                 )
-                                let idx = index(of: current, in: list)
+                                let idx = viewModel.index(of: current, in: list)
                                 if let idx { playerVM.setQueue(list, startAt: idx) }
-                                
                                 selectedTrack = current
                                 selectedURL = URL(fileURLWithPath: entry.localPath)
                                 isShowingPlayer = true
@@ -94,7 +80,7 @@ struct LibraryView: View {
                             .buttonStyle(.plain)
                             .swipeActions {
                                 Button(role: .destructive) {
-                                    Task { try? await downloadService.removeDownload(trackID: entry.trackID) }
+                                    Task { await viewModel.removeDownload(trackID: entry.trackID) }
                                 } label: {
                                     Label("Удалить", systemImage: "trash")
                                 }
@@ -104,7 +90,7 @@ struct LibraryView: View {
                 }
                 
                 Section(header: Text("Мои плейлисты")) {
-                    if let soundtracks {
+                    if let soundtracks = viewModel.soundtracks {
                         NavigationLink {
                             PlaylistDetailView(playlistName: soundtracks.name)
                         } label: {
@@ -129,12 +115,12 @@ struct LibraryView: View {
                                 Spacer()
                             }
                         }
-                    } else if isLoading {
+                    } else if viewModel.isLoading {
                         HStack {
                             ProgressView()
-                            Text("Загрузка плейлиста…")
+                            Text(String(format: NSLocalizedString("Загрузка плейлиста…", comment: "")))
                         }
-                    } else if let errorMessage {
+                    } else if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .foregroundColor(.red)
                     } else {
@@ -144,10 +130,10 @@ struct LibraryView: View {
                 }
                 
                 Section(header: Text("История прослушивания")) {
-                    ForEach(historyTracks, id: \.trackName) { track in
+                    ForEach(viewModel.historyTracks, id: \.trackName) { track in
                         Button {
-                            let list = historyTracks
-                            let idx = index(of: track, in: list)
+                            let list = viewModel.historyTracks
+                            let idx = viewModel.index(of: track, in: list)
                             if let idx { playerVM.setQueue(list, startAt: idx) }
                             selectedTrack = track
                             selectedURL = URL(string: track.audioURL)
@@ -161,24 +147,13 @@ struct LibraryView: View {
             }
             .navigationTitle("Медиатека")
             .task {
-                await loadSoundtracks()
+                await viewModel.loadSoundtracks()
             }
             .onAppear {
-                favoritesService.observeFavorites { tracks in
-                    DispatchQueue.main.async { self.favoriteTracks = tracks }
-                }
-                downloadService.observeDownloads { entries in
-                    DispatchQueue.main.async { self.downloads = entries }
-                }
-                historyService.observeHistory(limit: 50) { tracks in
-                  DispatchQueue.main.async { self.historyTracks = tracks }
-
-                }
+                viewModel.startObserving()
             }
             .onDisappear {
-                favoritesService.stopObserving()
-                downloadService.stopObserving()
-                historyService.stopObserving()
+                viewModel.stopObserving()
             }
             .sheet(isPresented: $isShowingPlayer) {
                 if let track = selectedTrack, let url = selectedURL {
@@ -186,26 +161,6 @@ struct LibraryView: View {
                 }
             }
         }
-    }
-    
-    @MainActor
-    private func loadSoundtracks() async {
-        guard !isLoading else { return }
-        isLoading = true
-        defer { isLoading = false }
-        
-        do {
-            self.soundtracks = try await playlistService.getPlaylist(named: "Soundtracks")
-        } catch {
-            self.errorMessage = error.localizedDescription
-        }
-    }
-    
-    private func index(of track: Track, in list: [Track]) -> Int? {
-        if let id = track.id {
-            return list.firstIndex(where: { $0.id == id })
-        }
-        return list.firstIndex(where: { $0.trackName == track.trackName && $0.performerName == track.performerName })
     }
 }
 

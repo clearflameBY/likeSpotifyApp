@@ -17,7 +17,7 @@ struct LoginOrSignUpView: View {
                     .frame(width: 60, height: 60)
                     .foregroundColor(.green)
                     .padding(.bottom, 20)
-                Text(isLogin ? "Вход" : "Регистрация")
+                Text(isLogin ? String(format: NSLocalizedString("Вход", comment: "")) : "Регистрация")
                     .font(.largeTitle)
                     .foregroundColor(.white)
                     .bold()
@@ -59,7 +59,7 @@ struct LoginOrSignUpView: View {
                 } label: {
                     HStack {
                         Spacer()
-                        Text(isLogin ? "Войти" : "Зарегистрироваться")
+                        Text(isLogin ? String(format: NSLocalizedString("Войти", comment: "")) : "Зарегистрироваться")
                             .bold()
                             .padding()
                         Spacer()
