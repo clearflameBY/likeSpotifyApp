@@ -12,7 +12,7 @@ struct RootView: View {
             if viewModel.isLoggedIn {
                 ContentView()
             } else {
-                LoginOrSignUpView()
+                LoginOrSignUpView(viewModel: viewModel)
             }
         }
         .environmentObject(viewModel)

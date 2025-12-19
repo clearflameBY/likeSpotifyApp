@@ -1,8 +1,6 @@
 import SwiftUI
 
 struct PlayerView: View {
-    let track: Track
-    let url: URL
     
     @EnvironmentObject private var playerVM: PlayerViewModel
     
@@ -17,7 +15,7 @@ struct PlayerView: View {
     
     var body: some View {
         VStack(spacing: 24) {
-            if let cover = track.coverArtURL, let coverURL = URL(string: cover) {
+            if let coverURL = playerVM.currentCoverArtURL {
                 AsyncImage(url: coverURL) { phase in
                     switch phase {
                     case .empty:
@@ -43,10 +41,10 @@ struct PlayerView: View {
             }
             
             VStack(spacing: 6) {
-                Text(track.trackName)
+                Text(playerVM.currentTrack?.trackName ?? "")
                     .font(.title2)
                     .bold()
-                Text(track.performerName)
+                Text(playerVM.currentTrack?.performerName ?? "")
                     .foregroundColor(.secondary)
             }
             
@@ -163,12 +161,12 @@ struct PlayerView: View {
         }
         .padding()
         .onAppear {
-            playerVM.setTrackMetadata(track)
+            playerVM.setTrackMetadata(playerVM.currentTrack!)
             Task {
                 if !didLogPlay {
                     if let current = playerVM.currentTrack {
-                        if current.id != nil, current.id == track.id ||
-                            (current.id == nil && current.trackName == track.trackName && current.performerName == track.performerName) {
+                        if current.id != nil, current.id == playerVM.currentTrack?.id ||
+                            (current.id == nil && current.trackName == playerVM.currentTrack?.trackName && current.performerName == playerVM.currentTrack?.performerName) {
                             await historyService.logPlay(track: current)
                             await MainActor.run { didLogPlay = true }
                         }
@@ -209,7 +207,7 @@ struct PlayerView: View {
     }
     
     private func refreshFavoriteState() async {
-        guard let id = track.id else {
+        guard let id = playerVM.currentTrack?.id else {
             isFavorite = false
             return
         }
@@ -222,13 +220,13 @@ struct PlayerView: View {
     }
     
     private func toggleFavorite() async {
-        guard let id = track.id else { return }
+        guard let id = playerVM.currentTrack?.id else { return }
         do {
             if isFavorite {
                 try await favoritesService.remove(byTrackID: id)
                 await MainActor.run { self.isFavorite = false }
             } else {
-                try await favoritesService.add(track: track)
+                try await favoritesService.add(track: playerVM.currentTrack!)
                 await MainActor.run { self.isFavorite = true }
             }
         } catch {
@@ -237,7 +235,7 @@ struct PlayerView: View {
     }
     
     private func refreshDownloadState() async {
-        guard let id = track.id else {
+        guard let id = playerVM.currentTrack?.id else {
             isDownloaded = false
             return
         }
@@ -250,14 +248,14 @@ struct PlayerView: View {
     }
     
     private func toggleDownload() async {
-        guard let id = track.id else { return }
+        guard let id = playerVM.currentTrack?.id  else { return }
         do {
             if isDownloaded {
                 try await downloadService.removeDownload(trackID: id)
                 await MainActor.run { self.isDownloaded = false }
             } else {
                 await MainActor.run { self.isDownloading = true }
-                try await downloadService.download(track: track)
+                try await downloadService.download(track: playerVM.currentTrack!)
                 await MainActor.run {
                     self.isDownloading = false
                     self.isDownloaded = true
@@ -278,6 +276,6 @@ struct PlayerView: View {
                        duration: "03:30",
                        audioURL: "https://example.com/audio.m4a",
                        coverArtURL: nil)
-    return PlayerView(track: sample, url: URL(string: "https://example.com/audio.m4a")!)
+    return PlayerView()
         .environmentObject(PlayerViewModel())
 }

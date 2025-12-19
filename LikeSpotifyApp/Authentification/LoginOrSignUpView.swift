@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct LoginOrSignUpView: View {
-    @EnvironmentObject private var viewModel: LoginOrSignUpViewModel
+    @ObservedObject var viewModel: LoginOrSignUpViewModel
 
     @State private var isLogin = true
     @State private var email = ""

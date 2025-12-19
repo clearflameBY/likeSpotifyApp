@@ -59,9 +59,7 @@ struct GenreTracksView: View {
             await load()
         }
         .sheet(isPresented: $isPresentingPlayer) {
-            if let selectedTrack, let url = URL(string: selectedTrack.audioURL) {
-                PlayerView(track: selectedTrack, url: url)
-            }
+            PlayerView()
         }
     }
     

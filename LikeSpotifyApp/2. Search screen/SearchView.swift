@@ -145,8 +145,8 @@ struct SearchView: View {
                 viewModel.searchTracks()
             }
             .sheet(isPresented: $isShowingPlayer) {
-                if let track = selectedTrack, let url = urlFromAudioString(track.audioURL) {
-                    PlayerView(track: track, url: url)
+                if let track = selectedTrack, let _ = urlFromAudioString(track.audioURL) {
+                    PlayerView()
                 }
             }
         }
@@ -362,8 +362,8 @@ struct AlbumTracksViewForSearch: View {
         .navigationBarTitleDisplayMode(.inline)
         .task { await load() }
         .sheet(isPresented: $isPresentingPlayer) {
-            if let selectedTrack, let url = urlFromAudioString(selectedTrack.audioURL) {
-                PlayerView(track: selectedTrack, url: url)
+            if let selectedTrack, let _ = urlFromAudioString(selectedTrack.audioURL) {
+                PlayerView()
             }
         }
     }

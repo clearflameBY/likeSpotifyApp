@@ -140,9 +140,7 @@ struct HomeView: View {
                 viewModel.searchTracks()
             }
             .sheet(isPresented: $isShowingPlayer) {
-                if let track = selectedTrack, let url = URL(string: track.audioURL) {
-                    PlayerView(track: track, url: url)
-                }
+                PlayerView()
             }
         }
     }
@@ -154,7 +152,7 @@ struct HomeView: View {
         case .heavyMetal:
             return ["LZEUTZFOZC8c1cxDKpkj"]
         case .alternativeRock:
-            return ["Gggrb7W9p4lIsWrwRPwv"]
+            return ["VCkDw6Wv7C0K3pnXJFE6"]
         }
     }
     

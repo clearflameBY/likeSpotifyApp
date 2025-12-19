@@ -1,6 +1,6 @@
 //
 //  GenreModel.swift
-//  akaSpotifyApp
+//  LikeSpotifyApp
 //
 //  Created by Илья Степаненко on 15.11.25.
 //

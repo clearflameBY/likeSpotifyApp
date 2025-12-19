@@ -10,7 +10,7 @@ final class PlayerViewModel: ObservableObject {
     @Published private(set) var isPlaying: Bool = false
     @Published private(set) var currentTime: Double = 0
     @Published private(set) var duration: Double = 0
-    
+
     enum RepeatMode: String, CaseIterable {
         case off
         case all
@@ -18,18 +18,21 @@ final class PlayerViewModel: ObservableObject {
     }
     @Published var shuffleEnabled: Bool = false
     @Published var repeatMode: RepeatMode = .off
-    
+
     @Published private(set) var queue: [Track] = []
     @Published private(set) var currentIndex: Int?
     var currentTrack: Track? {
         guard let idx = currentIndex, queue.indices.contains(idx) else { return nil }
         return queue[idx]
     }
-    
+
+    // Новое свойство:
+    @Published private(set) var currentCoverArtURL: URL?
+
     private var player: AVPlayer?
     private var timeObserver: Any?
     private var endObserver: NSObjectProtocol?
-    
+
     private var nowPlayingInfo: [String: Any] = [:]
     private var playToken: Any?
     private var pauseToken: Any?
@@ -39,7 +42,7 @@ final class PlayerViewModel: ObservableObject {
     private var changePositionToken: Any?
     private var nextTrackToken: Any?
     private var previousTrackToken: Any?
-    
+
     deinit {
         if let timeObserver { player?.removeTimeObserver(timeObserver) }
         if let endObserver { NotificationCenter.default.removeObserver(endObserver) }
@@ -54,7 +57,7 @@ final class PlayerViewModel: ObservableObject {
         if let previousTrackToken { center.previousTrackCommand.removeTarget(previousTrackToken) }
         NotificationCenter.default.removeObserver(self)
     }
-    
+
     func load(url: URL) {
         clearObservers()
         let item = AVPlayerItem(url: url)
@@ -63,8 +66,9 @@ final class PlayerViewModel: ObservableObject {
         attachObservers(for: item, player: newPlayer)
         updateNowPlayingMetadata(initial: true)
         setupRemoteCommands()
+        updateCoverArt()
     }
-    
+
     func setQueue(_ tracks: [Track], startAt index: Int) {
         queue = tracks
         currentIndex = tracks.indices.contains(index) ? index : tracks.indices.first
@@ -73,28 +77,29 @@ final class PlayerViewModel: ObservableObject {
         setTrackMetadata(tracks[idx])
         play()
     }
-    
+
     func setTrackMetadata(_ track: Track) {
         updateNowPlayingMetadata(initial: true, overrideTrack: track)
+        updateCoverArt(overrideTrack: track)
     }
-    
+
     func play() {
         do { try AVAudioSession.sharedInstance().setActive(true) } catch { print("[AudioSession] activate error: \(error)") }
         player?.play()
         isPlaying = true
         updateNowPlayingPlaybackState()
     }
-    
+
     func pause() {
         player?.pause()
         isPlaying = false
         updateNowPlayingPlaybackState()
     }
-    
+
     func toggle() {
         isPlaying ? pause() : play()
     }
-    
+
     func seek(to seconds: Double) {
         let time = CMTime(seconds: seconds, preferredTimescale: 600)
         player?.seek(to: time) { [weak self] _ in
@@ -105,11 +110,11 @@ final class PlayerViewModel: ObservableObject {
             }
         }
     }
-    
+
     func toggleShuffle() {
         shuffleEnabled.toggle()
     }
-    
+
     func cycleRepeatMode() {
         switch repeatMode {
         case .off: repeatMode = .all
@@ -117,23 +122,20 @@ final class PlayerViewModel: ObservableObject {
         case .one: repeatMode = .off
         }
     }
-    
+
     var canGoNext: Bool {
-        guard !queue.isEmpty else { return false }
         if shuffleEnabled { return queue.count > 1 }
         guard let idx = currentIndex else { return false }
         return idx < queue.count - 1 || repeatMode == .all
     }
-    
+
     var canGoPrevious: Bool {
-        guard !queue.isEmpty else { return false }
         if shuffleEnabled { return queue.count > 1 }
         guard let idx = currentIndex else { return false }
         return idx > 0 || repeatMode == .all
     }
-    
+
     func next() {
-        guard !queue.isEmpty else { return }
         if shuffleEnabled {
             let nextIndex = randomNextIndex()
             switchToIndex(nextIndex, autoPlay: true)
@@ -151,9 +153,8 @@ final class PlayerViewModel: ObservableObject {
         }
         switchToIndex(nextIndex, autoPlay: true)
     }
-    
+
     func previous() {
-        guard !queue.isEmpty else { return }
         if shuffleEnabled {
             let nextIndex = randomNextIndex()
             switchToIndex(nextIndex, autoPlay: true)
@@ -177,15 +178,15 @@ private extension PlayerViewModel {
     func clearObservers() {
         if let timeObserver { player?.removeTimeObserver(timeObserver) }
         timeObserver = nil
-        
+
         if let endObserver {
             NotificationCenter.default.removeObserver(endObserver)
             self.endObserver = nil
         }
-        
+
         NotificationCenter.default.removeObserver(self, name: AVAudioSession.interruptionNotification, object: AVAudioSession.sharedInstance())
     }
-    
+
     func attachObservers(for item: AVPlayerItem, player: AVPlayer) {
         timeObserver = player.addPeriodicTimeObserver(
             forInterval: CMTime(seconds: 0.5, preferredTimescale: 600),
@@ -200,7 +201,7 @@ private extension PlayerViewModel {
                 self.updateNowPlayingPlaybackState()
             }
         }
-        
+
         endObserver = NotificationCenter.default.addObserver(
             forName: .AVPlayerItemDidPlayToEndTime,
             object: item,
@@ -208,7 +209,7 @@ private extension PlayerViewModel {
         ) { [weak self] _ in
             self?.handleItemFinished()
         }
-        
+
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleInterruption(_:)),
@@ -216,7 +217,7 @@ private extension PlayerViewModel {
             object: AVAudioSession.sharedInstance()
         )
     }
-    
+
     func handleItemFinished() {
         switch repeatMode {
         case .one:
@@ -238,7 +239,7 @@ private extension PlayerViewModel {
             }
         }
     }
-    
+
     func randomNextIndex() -> Int {
         guard !queue.isEmpty else { return 0 }
         guard queue.count > 1, let currentIndex else { return 0 }
@@ -246,7 +247,7 @@ private extension PlayerViewModel {
         available.removeAll(where: { $0 == currentIndex })
         return available.randomElement() ?? currentIndex
     }
-    
+
     func switchToIndex(_ index: Int, autoPlay: Bool) {
         guard queue.indices.contains(index), let url = urlForTrack(queue[index]) else { return }
         currentIndex = index
@@ -254,7 +255,7 @@ private extension PlayerViewModel {
         setTrackMetadata(queue[index])
         if autoPlay { play() }
     }
-    
+
     func urlForTrack(_ track: Track) -> URL? {
         if let url = URL(string: track.audioURL), url.scheme != nil {
             return url
@@ -262,12 +263,22 @@ private extension PlayerViewModel {
             return URL(fileURLWithPath: track.audioURL)
         }
     }
+
+    // Новый метод для обновления currentCoverArtURL
+    func updateCoverArt(overrideTrack: Track? = nil) {
+        let t = overrideTrack ?? currentTrack
+        if let urlStr = t?.coverArtURL, let url = URL(string: urlStr) {
+            currentCoverArtURL = url
+        } else {
+            currentCoverArtURL = nil
+        }
+    }
 }
 
 private extension PlayerViewModel {
     func setupRemoteCommands() {
         let center = MPRemoteCommandCenter.shared()
-        
+
         if let playToken { center.playCommand.removeTarget(playToken) }
         if let pauseToken { center.pauseCommand.removeTarget(pauseToken) }
         if let toggleToken { center.togglePlayPauseCommand.removeTarget(toggleToken) }
@@ -276,7 +287,7 @@ private extension PlayerViewModel {
         if let changePositionToken { center.changePlaybackPositionCommand.removeTarget(changePositionToken) }
         if let nextTrackToken { center.nextTrackCommand.removeTarget(nextTrackToken) }
         if let previousTrackToken { center.previousTrackCommand.removeTarget(previousTrackToken) }
-        
+
         playToken = center.playCommand.addTarget { [weak self] _ in
             guard let self else { return .commandFailed }
             Task { @MainActor in self.play() }
@@ -298,48 +309,48 @@ private extension PlayerViewModel {
             return .success
         }
         center.skipForwardCommand.preferredIntervals = [15]
-        
+
         skipBackwardToken = center.skipBackwardCommand.addTarget { [weak self] _ in
             guard let self else { return .commandFailed }
             Task { @MainActor in self.seek(to: max(self.currentTime - 15, 0)) }
             return .success
         }
         center.skipBackwardCommand.preferredIntervals = [15]
-        
+
         changePositionToken = center.changePlaybackPositionCommand.addTarget { [weak self] event in
             guard let self,
                   let e = event as? MPChangePlaybackPositionCommandEvent else { return .commandFailed }
             Task { @MainActor in self.seek(to: e.positionTime) }
             return .success
         }
-        
+
         nextTrackToken = center.nextTrackCommand.addTarget { [weak self] _ in
             guard let self else { return .commandFailed }
             Task { @MainActor in self.next() }
             return .success
         }
-        
+
         previousTrackToken = center.previousTrackCommand.addTarget { [weak self] _ in
             guard let self else { return .commandFailed }
             Task { @MainActor in self.previous() }
             return .success
         }
     }
-    
+
     func updateNowPlayingMetadata(initial: Bool, overrideTrack: Track? = nil) {
         var info: [String: Any] = nowPlayingInfo
         let t = overrideTrack ?? currentTrack
-        
+
         info[MPMediaItemPropertyTitle] = t?.trackName ?? "Аудио"
         info[MPMediaItemPropertyArtist] = t?.performerName ?? ""
         if let album = t?.albumName {
             info[MPMediaItemPropertyAlbumTitle] = album
         }
-        
+
         if duration.isFinite, duration > 0 {
             info[MPMediaItemPropertyPlaybackDuration] = duration
         }
-        
+
         if let urlStr = t?.coverArtURL, let url = URL(string: urlStr) {
             Task.detached(priority: .background) { [weak self] in
                 guard let self else { return }
@@ -353,12 +364,12 @@ private extension PlayerViewModel {
                 }
             }
         }
-        
+
         nowPlayingInfo = info
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
         if !initial { updateNowPlayingPlaybackState() }
     }
-    
+
     func updateNowPlayingPlaybackState() {
         nowPlayingInfo[MPNowPlayingInfoPropertyElapsedPlaybackTime] = currentTime
         nowPlayingInfo[MPNowPlayingInfoPropertyPlaybackRate] = isPlaying ? 1.0 : 0.0
@@ -367,13 +378,13 @@ private extension PlayerViewModel {
         }
         MPNowPlayingInfoCenter.default().nowPlayingInfo = nowPlayingInfo
     }
-    
+
     @objc
     func handleInterruption(_ notification: Notification) {
         guard let info = notification.userInfo,
               let typeValue = info[AVAudioSessionInterruptionTypeKey] as? UInt,
               let type = AVAudioSession.InterruptionType(rawValue: typeValue) else { return }
-        
+
         switch type {
         case .began:
             pause()

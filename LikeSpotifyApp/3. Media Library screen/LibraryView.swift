@@ -156,9 +156,7 @@ struct LibraryView: View {
                 viewModel.stopObserving()
             }
             .sheet(isPresented: $isShowingPlayer) {
-                if let track = selectedTrack, let url = selectedURL {
-                    PlayerView(track: track, url: url)
-                }
+                PlayerView()
             }
         }
     }

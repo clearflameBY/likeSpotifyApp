@@ -13,6 +13,12 @@ final class LoginOrSignUpViewModel: ObservableObject {
 
     init(authService: AuthService) {
         self.authService = authService
+
+        // Проверяем, есть ли активный пользователь в FirebaseAuth
+        if let user = Auth.auth().currentUser {
+            self.userEmail = user.email
+            self.isLoggedIn = true
+        }
     }
 
     func signIn(withEmail email: String, password: String) async {
