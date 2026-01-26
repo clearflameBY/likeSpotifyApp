@@ -1,4 +1,3 @@
-import FirebaseCore
 import FirebaseAuth
 
 final class AuthService {
